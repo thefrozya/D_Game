@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "build",
+            "command": "C:/mingw64/bin/g++.exe",
+            "args": [
+                "-g",
+                "src/main.cpp",
+                "src/LevelLoader.cpp",
+                "src/LevelRenderer.cpp",
+                "src/Player.cpp",
+                "include/tinyxml2.cpp",
+                "src/ContactListener.cpp",
+                "-o",
+                "SimpleGame.exe",
+                "-IC:/SFML-2.5.1/include",
+                "-LC:/SFML-2.5.1/lib",
+                "-IC:/box2d-2.4.2/include",
+                "-LC:/box2d-2.4.2/build",
+                "-ID:/game/include",
+                "-lsfml-graphics",
+                "-lsfml-window",
+                "-lsfml-system",
+                "C:/box2d-2.4.2/build/bin/libbox2d.a",
+                "-std=c++17"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Generated task for building the project."
+        }
+    ]
+}
