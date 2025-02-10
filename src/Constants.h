@@ -10,6 +10,7 @@ static constexpr float ScaleCharacter = 0.5f; // Размер персонажа
 // Типы объектов для пользовательских данных
 static constexpr uintptr_t PLAYER_USER_DATA = 1; // Идентификатор игрока
 static constexpr uintptr_t PLATFORM_USER_DATA = 2; // Идентификатор платформы
+static constexpr uintptr_t MASHROOM_USER_DATA = 3; // Идентификатор гриба
 
 // Размеры окна
 static constexpr int WINDOW_WIDTH = 800;
@@ -20,7 +21,7 @@ static constexpr float GRAVITY_X = 0.0f;
 static constexpr float GRAVITY_Y = 9.8f;
 
 // Параметры игрока
-static constexpr float PLAYER_RUN_FORCE = 5.0f; // Сила бега
+static constexpr float PLAYER_RUN_FORCE = 4.0f; // Сила бега
 static constexpr float PLAYER_JUMP_IMPULSE = -7.0f; // Импульс прыжка
 static constexpr float PLAYER_MAX_SPEED = 5.0f; // Максимальная скорость
 static constexpr float PLAYER_SLOWDOWN_FACTOR = 0.5f; // Коэффициент замедления

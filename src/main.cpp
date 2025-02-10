@@ -59,6 +59,10 @@ void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
                     polygon.setFillColor(sf::Color::Transparent);
                     polygon.setOutlineThickness(2.0f);
                     polygon.setOutlineColor(sf::Color::Green); // Игрок
+                } else if (body->GetUserData().pointer == MASHROOM_USER_DATA) {
+                    polygon.setFillColor(sf::Color::Transparent);
+                    polygon.setOutlineThickness(2.0f);
+                    polygon.setOutlineColor(sf::Color::Blue); // Гриб
                 } else {
                     polygon.setFillColor(sf::Color::Transparent);
                     polygon.setOutlineThickness(2.0f);
@@ -140,11 +144,16 @@ int main() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
                 resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer, "assets/maps/level1.tmx", SCALE, contactListener);
             }
-            // Переключение визуализации коллизий
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
                 DEBUG_DRAW_ENABLED = !DEBUG_DRAW_ENABLED;
                 std::cout << "Debug draw visualization " << (DEBUG_DRAW_ENABLED ? "enabled" : "disabled") << std::endl;
             }
+        }
+    
+        // Проверяем, завершилась ли игра
+        if (contactListener.isGameOver) {
+            std::cout << "Game Over! Exiting..." << std::endl;
+            break; // Выходим из игрового цикла
         }
     
         float deltaTime = clock.restart().asSeconds();
