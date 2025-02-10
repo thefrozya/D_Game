@@ -28,4 +28,7 @@ static constexpr float PLAYER_SLOWDOWN_FACTOR = 0.5f; // Коэффициент 
 // Размер тайла
 static constexpr int TILE_SIZE = 16;
 
+// Флаг для отображения отладочной визуализации
+static bool DEBUG_DRAW_ENABLED = true;
+
 #endif

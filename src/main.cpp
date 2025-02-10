@@ -39,6 +39,10 @@ std::cout << "Level reset successfully!" << std::endl;
 }
 
 void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
+    if (!DEBUG_DRAW_ENABLED) {
+        return; // Если визуализация отключена, выходим из функции
+    }
+
     for (b2Body* body = world.GetBodyList(); body; body = body->GetNext()) {
         for (b2Fixture* fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
             if (fixture->GetType() == b2Shape::e_polygon) {
@@ -136,51 +140,53 @@ int main() {
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
                 resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer, "assets/maps/level1.tmx", SCALE, contactListener);
             }
+            // Переключение визуализации коллизий
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
+                DEBUG_DRAW_ENABLED = !DEBUG_DRAW_ENABLED;
+                std::cout << "Debug draw visualization " << (DEBUG_DRAW_ENABLED ? "enabled" : "disabled") << std::endl;
+            }
         }
-
+    
         float deltaTime = clock.restart().asSeconds();
-
+    
         // Обработка ввода и обновление физики
         player.handleInput();
         world.Step(deltaTime, 8, 3);
         player.update(deltaTime);
-
+    
         // Обновление камеры
-                // Обновление камеры
-                if (!isGlobalView) {
-                    sf::Vector2f playerPosition = player.getPosition();
-                    sf::Vector2f currentCenter = viewPlayer.getCenter();
-                    sf::Vector2f targetCenter(playerPosition.x * SCALE, playerPosition.y * SCALE);
-                    viewPlayer.setCenter(currentCenter + (targetCenter - currentCenter) * cameraSpeed);
-        
-                    float minX = window.getSize().x / 2.0f;
-                    float maxX = 50 * TILE_SIZE - window.getSize().x / 2.0f;
-                    float minY = window.getSize().y / 2.0f;
-                    float maxY = 50 * TILE_SIZE - window.getSize().y / 2.0f;
-        
-                    sf::Vector2f center = viewPlayer.getCenter();
-                    center.x = std::max(minX, std::min(center.x, maxX));
-                    center.y = std::max(minY, std::min(center.y, maxY));
-                    viewPlayer.setCenter(center);
-        
-                    window.setView(viewPlayer);
-                }
-        
-                // Очистка экрана
-                window.clear(sf::Color(192, 192, 192)); // Серый фон
-        
-                // Отрисовка уровня
-                renderLevel(window, tilesetTexture, levelData, TILE_SIZE, firstgid);
-        
-                // Отрисовка игрока
-                player.draw(window);
-        
-                // Отладочная визуализация физических тел
-                debugDrawPhysics(window, world, SCALE);
-        
-                // Отображение содержимого
-                window.display();
-            }
-        
-            return 0;
+        if (!isGlobalView) {
+            sf::Vector2f playerPosition = player.getPosition();
+            sf::Vector2f currentCenter = viewPlayer.getCenter();
+            sf::Vector2f targetCenter(playerPosition.x * SCALE, playerPosition.y * SCALE);
+            viewPlayer.setCenter(currentCenter + (targetCenter - currentCenter) * cameraSpeed);
+    
+            float minX = window.getSize().x / 2.0f;
+            float maxX = 50 * TILE_SIZE - window.getSize().x / 2.0f;
+            float minY = window.getSize().y / 2.0f;
+            float maxY = 50 * TILE_SIZE - window.getSize().y / 2.0f;
+    
+            sf::Vector2f center = viewPlayer.getCenter();
+            center.x = std::max(minX, std::min(center.x, maxX));
+            center.y = std::max(minY, std::min(center.y, maxY));
+            viewPlayer.setCenter(center);
+    
+            window.setView(viewPlayer);
         }
+    
+        // Очистка экрана
+        window.clear(sf::Color(192, 192, 192)); // Серый фон
+    
+        // Отрисовка уровня
+        renderLevel(window, tilesetTexture, levelData, TILE_SIZE, firstgid);
+    
+        // Отрисовка игрока
+        player.draw(window);
+    
+        // Отладочная визуализация физических тел
+        debugDrawPhysics(window, world, SCALE);
+    
+        // Отображение содержимого
+        window.display();
+    }
+}
