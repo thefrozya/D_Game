@@ -10,6 +10,7 @@ class ContactListener : public b2ContactListener {
     
         bool isJumping = false; // Флаг для прыжка
         bool isGameOver = false; // Флаг завершения игры
+        bool isGrounded = false; // Флаг, указывающий, что игрок на земле
     };
 
 #endif

@@ -18,7 +18,7 @@ static constexpr int WINDOW_HEIGHT = 600;
 
 // Гравитация
 static constexpr float GRAVITY_X = 0.0f;
-static constexpr float GRAVITY_Y = 9.8f;
+static constexpr float GRAVITY_Y = 15.0f;
 
 // Параметры игрока
 static constexpr float PLAYER_RUN_FORCE = 5.0f; // Сила бега

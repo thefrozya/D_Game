@@ -7,54 +7,58 @@
 #include <Box2D/Box2D.h>
 #include <iostream>
 
+#include "Menu.h"
+
+// Флаг для отображения отладочной визуализации
+
+
 // Функция для сброса уровня
 void resetLevel(sf::RenderWindow& window, b2World& world, sf::Texture& tilesetTexture,
     std::vector<std::vector<int>>& levelData, int& firstgid, Player& player,
     sf::View& viewPlayer, const std::string& levelPath, float scale, ContactListener& contactListener) {
-// Удаляем все тела из мира Box2D
-for (b2Body* body = world.GetBodyList(); body; body = body->GetNext()) {
-world.DestroyBody(body);
-}
-
-// Сбрасываем данные уровня
-levelData.clear();
-firstgid = 0;
-
-// Загружаем уровень заново
-sf::Vector2f spawnPoint(0.0f, 0.0f);
-if (!LevelLoader::loadLevel(levelPath, tilesetTexture, levelData, firstgid, world, spawnPoint, scale)) {
-std::cerr << "Failed to reload level!" << std::endl;
-return;
-}
-
-// Пересоздаем игрока
-player = Player(world, spawnPoint.x, spawnPoint.y, &contactListener);
-
-// Сбрасываем камеру
-sf::Vector2f startPosition(spawnPoint.x * SCALE, spawnPoint.y * SCALE);
-viewPlayer.setCenter(startPosition);
-window.setView(viewPlayer);
-
-std::cout << "Level reset successfully!" << std::endl;
+    std::cout << "Resetting level: " << levelPath << std::endl;
+    // Удаляем все тела из мира Box2D
+    for (b2Body* body = world.GetBodyList(); body; ) {
+        b2Body* nextBody = body->GetNext();
+        world.DestroyBody(body);
+        body = nextBody;
+    }
+    std::cout << "All bodies destroyed successfully." << std::endl;
+    // Сбрасываем данные уровня
+    levelData.clear();
+    firstgid = 0;
+    // Загружаем уровень заново
+    sf::Vector2f spawnPoint(0.0f, 0.0f);
+    if (!LevelLoader::loadLevel(levelPath, tilesetTexture, levelData, firstgid, world, spawnPoint, scale)) {
+        std::cerr << "Failed to reload level from path: " << levelPath << std::endl;
+        return;
+    }
+    std::cout << "Level loaded successfully." << std::endl;
+    // Пересоздаем игрока
+    player = Player(world, spawnPoint.x, spawnPoint.y, &contactListener);
+    std::cout << "Player created successfully at position: (" << spawnPoint.x << ", " << spawnPoint.y << ")" << std::endl;
+    // Сбрасываем камеру
+    sf::Vector2f startPosition(spawnPoint.x * SCALE, spawnPoint.y * SCALE);
+    viewPlayer.setCenter(startPosition);
+    window.setView(viewPlayer);
+    std::cout << "Camera set successfully." << std::endl;
 }
 
 void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
     if (!DEBUG_DRAW_ENABLED) {
         return; // Если визуализация отключена, выходим из функции
     }
-
     for (b2Body* body = world.GetBodyList(); body; body = body->GetNext()) {
         for (b2Fixture* fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
             if (fixture->GetType() == b2Shape::e_polygon) {
                 b2PolygonShape* shape = (b2PolygonShape*)fixture->GetShape();
                 int vertexCount = shape->m_count;
                 sf::ConvexShape polygon(vertexCount);
-
                 for (int i = 0; i < vertexCount; ++i) {
                     b2Vec2 vertex = body->GetWorldPoint(shape->m_vertices[i]);
                     polygon.setPoint(i, sf::Vector2f(vertex.x * scale, vertex.y * scale));
                 }
-
+                // Определяем цвет в зависимости от типа тела
                 if (body->GetType() == b2_dynamicBody) {
                     polygon.setFillColor(sf::Color::Transparent);
                     polygon.setOutlineThickness(2.0f);
@@ -68,7 +72,6 @@ void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
                     polygon.setOutlineThickness(2.0f);
                     polygon.setOutlineColor(sf::Color::Red); // Платформы
                 }
-
                 window.draw(polygon);
             }
         }
@@ -76,61 +79,53 @@ void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
 }
 
 int main() {
-
     std::cout << "Starting game initialization..." << std::endl;
     // Создание окна
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "2D Platformer");
     window.setFramerateLimit(60);
     std::cout << "Window created successfully." << std::endl;
-
     // Загрузка текстуры тайлсета
     sf::Texture tilesetTexture;
     if (!tilesetTexture.loadFromFile("assets/textures/tileset.png")) {
-        std::cerr << "Failed to load tileset texture!" << std::endl;
+        std::cerr << "Failed to load tileset texture from path: assets/textures/tileset.png" << std::endl;
         return -1;
     }
     std::cout << "Tileset texture loaded successfully." << std::endl;
-
-
-    std::vector<std::vector<int>> levelData;
-    int firstgid = 0;
-    sf::Vector2f spawnPoint(0.0f, 0.0f);
-
     // Создание мира Box2D
     b2Vec2 gravity(GRAVITY_X, GRAVITY_Y);
     b2World world(gravity);
-
+    std::cout << "Box2D world created successfully." << std::endl;
     // Создание обработчика контактов
     ContactListener contactListener;
     world.SetContactListener(&contactListener);
-
+    std::cout << "Contact listener set successfully." << std::endl;
+    // Создание меню
+    Menu menu(WINDOW_WIDTH, WINDOW_HEIGHT);
+    std::cout << "Menu created successfully." << std::endl;
+    // Переменные для игры
+    std::vector<std::vector<int>> levelData;
+    int firstgid = 0;
+    sf::Vector2f spawnPoint(0.0f, 0.0f);
     // Загрузка уровня
     if (!LevelLoader::loadLevel("assets/maps/level1.tmx", tilesetTexture, levelData, firstgid, world, spawnPoint, SCALE)) {
         std::cerr << "Failed to load level!" << std::endl;
         return -1;
     }
     std::cout << "Level loaded successfully." << std::endl;
-
-
     // Создание игрока
     Player player(world, spawnPoint.x, spawnPoint.y, &contactListener);
     std::cout << "Player created successfully." << std::endl;
-
     // Приближенная камера (следует за игроком)
     sf::View viewPlayer(sf::FloatRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT));
     const float cameraSpeed = 0.1f;
-
     // Глобальная камера (показывает всю карту)
     sf::View viewGlobal(sf::FloatRect(0, 0, 50 * TILE_SIZE, 50 * TILE_SIZE));
     viewGlobal.setViewport(sf::FloatRect(0, 0, 1.0f, 1.0f));
-
     bool isGlobalView = false;
-
     // Установка начальной позиции камеры
     sf::Vector2f startPosition(spawnPoint.x * SCALE, spawnPoint.y * SCALE);
     viewPlayer.setCenter(startPosition);
     window.setView(viewPlayer);
-
     // Основной цикл игры
     sf::Clock clock;
     while (window.isOpen()) {
@@ -158,53 +153,54 @@ int main() {
             }
         }
         
-    
         // Проверяем, завершилась ли игра
         if (contactListener.isGameOver) {
             std::cout << "Game Over! Exiting..." << std::endl;
             break; // Выходим из игрового цикла
         }
-    
+        
         float deltaTime = clock.restart().asSeconds();
-    
+        
         // Обработка ввода и обновление физики
         player.handleInput();
         world.Step(deltaTime, 8, 3);
         player.update(deltaTime);
-    
+        
         // Обновление камеры
         if (!isGlobalView) {
             sf::Vector2f playerPosition = player.getPosition();
             sf::Vector2f currentCenter = viewPlayer.getCenter();
             sf::Vector2f targetCenter(playerPosition.x * SCALE, playerPosition.y * SCALE);
             viewPlayer.setCenter(currentCenter + (targetCenter - currentCenter) * cameraSpeed);
-    
+
             float minX = window.getSize().x / 2.0f;
             float maxX = 50 * TILE_SIZE - window.getSize().x / 2.0f;
             float minY = window.getSize().y / 2.0f;
             float maxY = 50 * TILE_SIZE - window.getSize().y / 2.0f;
-    
+
             sf::Vector2f center = viewPlayer.getCenter();
             center.x = std::max(minX, std::min(center.x, maxX));
             center.y = std::max(minY, std::min(center.y, maxY));
             viewPlayer.setCenter(center);
-    
+
             window.setView(viewPlayer);
         }
-    
+        
         // Очистка экрана
         window.clear(sf::Color(192, 192, 192)); // Серый фон
-    
+        
         // Отрисовка уровня
         renderLevel(window, tilesetTexture, levelData, TILE_SIZE, firstgid);
-    
+        
         // Отрисовка игрока
         player.draw(window);
-    
+        
         // Отладочная визуализация физических тел
         debugDrawPhysics(window, world, SCALE);
-    
+        
         // Отображение содержимого
         window.display();
+        std::cout << "Frame displayed." << std::endl;
     }
+    return 0;
 }

@@ -13,6 +13,8 @@
                 "src/Player.cpp",
                 "include/tinyxml2.cpp",
                 "src/ContactListener.cpp",
+                
+                "src/Menu.cpp",
                 "-o",
                 "SimpleGame.exe",
                 "-IC:/SFML-2.5.1/include",
