@@ -3,27 +3,39 @@
 
 #include <SFML/Graphics.hpp>
 #include <Box2D/Box2D.h>
-#include "Constants.h"
-#include "ContactListener.h" // Подключаем заголовочный файл для ContactListener
+#include <vector>
+
+class ContactListener; // Предварительное объявление
 
 class Player {
 public:
-    Player() = default; // Конструктор по умолчанию
-    Player(b2World& world, float x, float y, ContactListener* contactListener); // Добавляем параметр ContactListener
+    Player(b2World& world, float x, float y, ContactListener* contactListener);
     void update(float deltaTime);
     void handleInput();
     void draw(sf::RenderWindow& window);
-
-    b2Body* getBody() const { return body; }
     sf::Vector2f getPosition() const;
 
-private:
-    b2Body* body = nullptr; // Физическое тело
-    sf::Texture texture; // Текстура игрока
-    sf::Sprite sprite; // Спрайт игрока
+    // Метод для проверки пиксельной коллизии
+    bool checkPixelCollision(const std::vector<sf::Vector2f>& otherPixels, const sf::Vector2f& otherPosition);
 
-    bool isRunning = false; // Флаг для бега
-    ContactListener* contactListener; // Указатель на обработчик контактов
+private:
+    void loadTextureAndCreateCollisionMask();
+    void updateAnimation(float deltaTime); // Новый метод для обновления анимации
+
+    b2Body* body;
+    sf::Texture texture;
+    sf::Sprite sprite;
+    bool isRunning = false;
+    ContactListener* contactListener;
+
+    // Маска коллизии (непрозрачные пиксели)
+    std::vector<sf::Vector2f> collisionPixels;
+
+    // Параметры анимации
+    sf::IntRect currentFrame; // Текущий кадр анимации
+    std::vector<sf::IntRect> frames; // Все кадры анимации
+    float animationTimer = 0.0f; // Таймер для анимации
+    float animationSpeed = 0.1f; // Скорость анимации (время между кадрами)
 };
 
-#endif
+#endif // PLAYER_H

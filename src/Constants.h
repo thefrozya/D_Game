@@ -21,7 +21,7 @@ static constexpr float GRAVITY_X = 0.0f;
 static constexpr float GRAVITY_Y = 9.8f;
 
 // Параметры игрока
-static constexpr float PLAYER_RUN_FORCE = 4.0f; // Сила бега
+static constexpr float PLAYER_RUN_FORCE = 5.0f; // Сила бега
 static constexpr float PLAYER_JUMP_IMPULSE = -7.0f; // Импульс прыжка
 static constexpr float PLAYER_MAX_SPEED = 5.0f; // Максимальная скорость
 static constexpr float PLAYER_SLOWDOWN_FACTOR = 0.5f; // Коэффициент замедления

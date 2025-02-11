@@ -76,9 +76,12 @@ void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
 }
 
 int main() {
+
+    std::cout << "Starting game initialization..." << std::endl;
     // Создание окна
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "2D Platformer");
     window.setFramerateLimit(60);
+    std::cout << "Window created successfully." << std::endl;
 
     // Загрузка текстуры тайлсета
     sf::Texture tilesetTexture;
@@ -86,6 +89,8 @@ int main() {
         std::cerr << "Failed to load tileset texture!" << std::endl;
         return -1;
     }
+    std::cout << "Tileset texture loaded successfully." << std::endl;
+
 
     std::vector<std::vector<int>> levelData;
     int firstgid = 0;
@@ -104,9 +109,12 @@ int main() {
         std::cerr << "Failed to load level!" << std::endl;
         return -1;
     }
+    std::cout << "Level loaded successfully." << std::endl;
+
 
     // Создание игрока
     Player player(world, spawnPoint.x, spawnPoint.y, &contactListener);
+    std::cout << "Player created successfully." << std::endl;
 
     // Приближенная камера (следует за игроком)
     sf::View viewPlayer(sf::FloatRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT));
@@ -149,6 +157,7 @@ int main() {
                 std::cout << "Debug draw visualization " << (DEBUG_DRAW_ENABLED ? "enabled" : "disabled") << std::endl;
             }
         }
+        
     
         // Проверяем, завершилась ли игра
         if (contactListener.isGameOver) {
