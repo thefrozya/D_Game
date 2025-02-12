@@ -2,8 +2,12 @@
 #include "Constants.h"
 
 
-// Глобальная переменная для включения/отключения отладочной визуализации
-
+// Вспомогательная функция для настройки полигона
+void setupPolygon(sf::ConvexShape& polygon, const sf::Color& color, float outlineThickness = 2.0f) {
+    polygon.setFillColor(sf::Color::Transparent);
+    polygon.setOutlineThickness(outlineThickness);
+    polygon.setOutlineColor(color);
+}
 
 void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
     if (!DEBUG_DRAW_ENABLED) {
@@ -24,17 +28,11 @@ void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
 
                 // Определяем цвет в зависимости от типа тела
                 if (body->GetType() == b2_dynamicBody) {
-                    polygon.setFillColor(sf::Color::Transparent);
-                    polygon.setOutlineThickness(2.0f);
-                    polygon.setOutlineColor(sf::Color::Green); // Игрок
+                    setupPolygon(polygon, sf::Color::Green);
                 } else if (body->GetUserData().pointer == MASHROOM_USER_DATA) {
-                    polygon.setFillColor(sf::Color::Transparent);
-                    polygon.setOutlineThickness(2.0f);
-                    polygon.setOutlineColor(sf::Color::Blue); // Гриб
+                    setupPolygon(polygon, sf::Color::Blue);
                 } else {
-                    polygon.setFillColor(sf::Color::Transparent);
-                    polygon.setOutlineThickness(2.0f);
-                    polygon.setOutlineColor(sf::Color::Red); // Платформы
+                    setupPolygon(polygon, sf::Color::Red);
                 }
 
                 window.draw(polygon);

@@ -7,11 +7,10 @@
 #include <string>
 #include "Constants.h"
 
-class LevelLoader {
-public:
-    static bool loadLevel(const std::string& filePath, sf::Texture& tilesetTexture,
-                          std::vector<std::vector<int>>& levelData, int& firstgid,
-                          b2World& world, sf::Vector2f& spawnPoint, float SCALE);
-};
+namespace LevelLoader {
+    bool loadLevel(const std::string& filePath, sf::Texture& tilesetTexture,
+                   std::vector<std::vector<int>>& levelData, int& firstgid,
+                   b2World& world, sf::Vector2f& spawnPoint, float scale);
+}
 
-#endif
+#endif // LEVELLOADER_H

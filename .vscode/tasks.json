@@ -13,7 +13,7 @@
                 "src/Player.cpp",
                 "include/tinyxml2.cpp",
                 "src/ContactListener.cpp",
-                
+                "src/DebugUtils.cpp",
                 "src/Menu.cpp",
                 "-o",
                 "SimpleGame.exe",

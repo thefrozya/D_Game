@@ -2,33 +2,55 @@
 #include "Constants.h"
 #include <iostream>
 
+// Реализация метода IsPlayerPlatformContact
+bool ContactListener::IsPlayerPlatformContact(uintptr_t bodyAUserData, uintptr_t bodyBUserData) {
+    return (bodyAUserData == PLAYER_USER_DATA && bodyBUserData == PLATFORM_USER_DATA) ||
+           (bodyBUserData == PLAYER_USER_DATA && bodyAUserData == PLATFORM_USER_DATA);
+}
+
+// Реализация метода IsPlayerMashroomContact
+bool ContactListener::IsPlayerMashroomContact(uintptr_t bodyAUserData, uintptr_t bodyBUserData) {
+    return (bodyAUserData == PLAYER_USER_DATA && bodyBUserData == MASHROOM_USER_DATA) ||
+           (bodyBUserData == PLAYER_USER_DATA && bodyAUserData == MASHROOM_USER_DATA);
+}
+
 void ContactListener::BeginContact(b2Contact* contact) {
-    // Получаем пользовательские данные для обоих тел
     uintptr_t bodyAUserData = contact->GetFixtureA()->GetBody()->GetUserData().pointer;
     uintptr_t bodyBUserData = contact->GetFixtureB()->GetBody()->GetUserData().pointer;
 
-    // Проверяем, что одно из тел — игрок, а другое — гриб
-    if ((bodyAUserData == PLAYER_USER_DATA && bodyBUserData == MASHROOM_USER_DATA) ||
-        (bodyBUserData == PLAYER_USER_DATA && bodyAUserData == MASHROOM_USER_DATA)) {
-        std::cout << "Player touched the mashroom! Ending the game..." << std::endl;
-        isGameOver = true; // Флаг завершения игры
+    if (IsPlayerMashroomContact(bodyAUserData, bodyBUserData)) {
+        isGameOver = true; // Завершение игры
     }
 
-    // Проверяем, что игрок касается платформы
-    if ((bodyAUserData == PLAYER_USER_DATA && bodyBUserData == PLATFORM_USER_DATA) ||
-        (bodyBUserData == PLAYER_USER_DATA && bodyAUserData == PLATFORM_USER_DATA)) {
-        isJumping = false; // Игрок касается платформы
+    if (IsPlayerPlatformContact(bodyAUserData, bodyBUserData)) {
+        onGround = true; // Устанавливаем флаг "на земле"
+        std::cout << "Player is on ground: true" << std::endl;
     }
 }
 
 void ContactListener::EndContact(b2Contact* contact) {
-    // Получаем пользовательские данные для обоих тел
     uintptr_t bodyAUserData = contact->GetFixtureA()->GetBody()->GetUserData().pointer;
     uintptr_t bodyBUserData = contact->GetFixtureB()->GetBody()->GetUserData().pointer;
 
-    // Проверяем, что игрок больше не касается платформы
-    if ((bodyAUserData == PLAYER_USER_DATA && bodyBUserData == PLATFORM_USER_DATA) ||
-        (bodyBUserData == PLAYER_USER_DATA && bodyAUserData == PLATFORM_USER_DATA)) {
-        isJumping = true; // Игрок больше не касается платформы
+    if (IsPlayerPlatformContact(bodyAUserData, bodyBUserData)) {
+        // Проверяем, остались ли другие активные контакты
+        bool hasOtherContacts = false;
+
+        b2ContactEdge* contactEdge = player->getBody()->GetContactList();
+        while (contactEdge) {
+            b2Contact* currentContact = contactEdge->contact;
+            if (currentContact->IsTouching()) {
+                uintptr_t otherBodyAUserData = currentContact->GetFixtureA()->GetBody()->GetUserData().pointer;
+                uintptr_t otherBodyBUserData = currentContact->GetFixtureB()->GetBody()->GetUserData().pointer;
+                if (IsPlayerPlatformContact(otherBodyAUserData, otherBodyBUserData)) {
+                    hasOtherContacts = true;
+                    break;
+                }
+            }
+            contactEdge = contactEdge->next;
+        }
+
+        onGround = hasOtherContacts; // Обновляем флаг "на земле"
+        std::cout << "Player is on ground: " << (onGround ? "true" : "false") << std::endl;
     }
 }

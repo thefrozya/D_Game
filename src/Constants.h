@@ -4,9 +4,6 @@
 // Масштаб (пиксели в метры)
 static constexpr float SCALE = 30.0f; // 1 метр = 30 пикселей
 
-// Масштаб персонажа
-static constexpr float ScaleCharacter = 0.5f; // Размер персонажа: 0.5 метра (вместо 1 метра)
-
 // Типы объектов для пользовательских данных
 static constexpr uintptr_t PLAYER_USER_DATA = 1; // Идентификатор игрока
 static constexpr uintptr_t PLATFORM_USER_DATA = 2; // Идентификатор платформы
@@ -29,7 +26,7 @@ static constexpr float PLAYER_SLOWDOWN_FACTOR = 0.5f; // Коэффициент 
 // Размер тайла
 static constexpr int TILE_SIZE = 16;
 
-// Флаг для отображения отладочной визуализации
+// Флаг для отладочной визуализации
 static bool DEBUG_DRAW_ENABLED = true;
 
 #endif
