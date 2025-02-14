@@ -4,7 +4,7 @@
 #include <iostream>
 
 // Конструктор
-Player::Player(b2World& world, float x, float y, ContactListener* contactListener)
+Player::Player(b2World& world, float x, float y, ContactListener* contactListener,const sf::Texture& texture)
     : world(world), contactListener(contactListener),isJumping(false) {  
     
         std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
@@ -49,6 +49,16 @@ Player::~Player() {
         world.DestroyBody(body);
         body = nullptr;
     }
+}
+
+sf::FloatRect Player::getBoundingBox() const {
+    b2Vec2 position = body->GetPosition();
+    return sf::FloatRect(
+        position.x * SCALE - sprite.getOrigin().x,
+        position.y * SCALE - sprite.getOrigin().y,
+        sprite.getTexture()->getSize().x,
+        sprite.getTexture()->getSize().y
+    );
 }
 
 // Метод для загрузки текстуры и создания маски коллизии

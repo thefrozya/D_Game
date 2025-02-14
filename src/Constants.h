@@ -7,7 +7,8 @@ static constexpr float SCALE = 30.0f; // 1 метр = 30 пикселей
 // Типы объектов для пользовательских данных
 static constexpr uintptr_t PLAYER_USER_DATA = 1; // Идентификатор игрока
 static constexpr uintptr_t PLATFORM_USER_DATA = 2; // Идентификатор платформы
-static constexpr uintptr_t MASHROOM_USER_DATA = 3; // Идентификатор гриба
+static constexpr uintptr_t MASHROOM_USER_DATA = 3; // Идентификатор
+static constexpr uintptr_t COIN_USER_DATA = 5;   // ID монеты
 
 // Размеры окна
 static constexpr int WINDOW_WIDTH = 800;

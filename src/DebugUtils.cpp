@@ -10,7 +10,7 @@ void setupPolygon(sf::ConvexShape& polygon, const sf::Color& color, float outlin
 }
 
 void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
-    if (!DEBUG_DRAW_ENABLED) {
+    if (DEBUG_DRAW_ENABLED) {
         return; // Если визуализация отключена, выходим из функции
     }
 

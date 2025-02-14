@@ -1,6 +1,7 @@
 #include "ContactListener.h"
 #include "Constants.h"
 #include <iostream>
+#include "Coin.h" // Подключаем класс Coin
 
 // Реализация метода IsPlayerPlatformContact
 bool ContactListener::IsPlayerPlatformContact(uintptr_t bodyAUserData, uintptr_t bodyBUserData) {
@@ -26,7 +27,17 @@ void ContactListener::BeginContact(b2Contact* contact) {
         onGround = true; // Устанавливаем флаг "на земле"
         std::cout << "Player is on ground: true" << std::endl;
     }
+    if (bodyAUserData == PLAYER_USER_DATA && bodyBUserData == COIN_USER_DATA) {
+        Player* player = reinterpret_cast<Player*>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
+        Coin* coin = reinterpret_cast<Coin*>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
+        coin->collect();
+    } else if (bodyBUserData == PLAYER_USER_DATA && bodyAUserData == COIN_USER_DATA) {
+        Player* player = reinterpret_cast<Player*>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
+        Coin* coin = reinterpret_cast<Coin*>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
+        coin->collect();
+    }
 }
+
 
 void ContactListener::EndContact(b2Contact* contact) {
     uintptr_t bodyAUserData = contact->GetFixtureA()->GetBody()->GetUserData().pointer;

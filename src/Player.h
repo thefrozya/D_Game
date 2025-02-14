@@ -10,7 +10,7 @@ class ContactListener; // Предварительное объявление
 class Player {
 public:
     // Конструкторы
-    Player(b2World& world, float x, float y, ContactListener* contactListener);
+    Player(b2World& world, float x, float y, ContactListener* contactListener,const sf::Texture& texture);
     Player(Player&& other) noexcept; // Конструктор перемещения
     ~Player(); // Деструктор для удаления физического тела
 
@@ -21,6 +21,8 @@ public:
     void update(float deltaTime);
     void handleInput();
     void draw(sf::RenderWindow& window);
+
+    sf::FloatRect getBoundingBox() const; // Добавляем метод
 
     // Метод для получения позиции игрока
     sf::Vector2f getPosition() const;
@@ -34,10 +36,12 @@ public:
 
     b2Body* getBody() const { return body; } // Метод для получения физического тела
 
+        // Приватные методы
+        void loadTextureAndCreateCollisionMask();
+        void updateAnimation(float deltaTime); // Новый метод для обновления анимации
+
 private:
-    // Приватные методы
-    void loadTextureAndCreateCollisionMask();
-    void updateAnimation(float deltaTime); // Новый метод для обновления анимации
+
 
     // Физика Box2D
     b2World& world; // Ссылка на мир Box2D
