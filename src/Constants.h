@@ -2,7 +2,7 @@
 #define CONSTANTS_H
 
 // Масштаб (пиксели в метры)
-static constexpr float SCALE = 32.0f; // 1 метр = 30 пикселей
+static constexpr float SCALE = 30.0f; // 1 метр = 30 пикселей
 
 // Типы объектов для пользовательских данных
 static constexpr uintptr_t PLAYER_USER_DATA = 1; // Идентификатор игрока
@@ -40,7 +40,6 @@ static int MAP_WIDTH_IN_TILES = 0; // Ширина карты в тайлах
 static int MAP_HEIGHT_IN_TILES = 0; // Высота карты в тайлах
 static int TILE_SIZE_IN_PIXELS = 16; // Размер одного тайла в пикселях (по умолчанию 16)
 
-// Флаг для отладочной визуализации
-static bool DEBUG_DRAW_ENABLED = true;
+extern bool DEBUG_DRAW_ENABLED;
 
 #endif

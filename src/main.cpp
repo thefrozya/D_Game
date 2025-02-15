@@ -11,10 +11,16 @@
 #include <random>
 #include <cmath>
 
+
+// Инициализация глобальной переменной DEBUG_DRAW_ENABLED
+bool DEBUG_DRAW_ENABLED = false;
+
 // Глобальная текстура для персонажа (бег и статичные состояния)
 sf::Texture playerRunTexture;
 // Глобальная текстура для прыжка
 sf::Texture playerJumpTexture;
+// Глобальная текстура для смерти
+sf::Texture playerDeathTexture;
 // Глобальная текстура для монет
 sf::Texture coinTexture;
 
@@ -57,7 +63,7 @@ void resetGameState(Player& player, std::vector<Coin>& coins, int& score, sf::Ve
 // Функция для сброса уровня
 void resetLevel(sf::RenderWindow& window, b2World& world, sf::Texture& tilesetTexture,
                std::vector<std::vector<int>>& levelData, int& firstgid, Player& player,
-               sf::View& viewPlayer, const std::string& levelPath, float scale, ContactListener& contactListener, sf::Texture& playerRunTexture, sf::Texture& playerJumpTexture, std::vector<Coin>& coins,
+               sf::View& viewPlayer, const std::string& levelPath, float scale, ContactListener& contactListener, sf::Texture& playerRunTexture, sf::Texture& playerJumpTexture, sf::Texture& playerDeathTexture, std::vector<Coin>& coins,
                int mapWidthInTiles, int mapHeightInTiles, int tileSize) {
     // Удаляем все тела из мира Box2D
     for (b2Body* body = world.GetBodyList(); body; ) {
@@ -75,7 +81,9 @@ void resetLevel(sf::RenderWindow& window, b2World& world, sf::Texture& tilesetTe
         return;
     }
     // Пересоздаем игрока, используя глобальные текстуры
-    player = Player(world, spawnPoint.x, spawnPoint.y, &contactListener, playerRunTexture, playerJumpTexture);
+    player = Player(world, spawnPoint.x, spawnPoint.y, &contactListener, playerRunTexture, playerJumpTexture, playerDeathTexture);
+    // Обновляем указатель на игрока в ContactListener
+    contactListener.setPlayer(&player);
     // Очищаем старые монеты
     coins.clear();
     // Создаем новые монеты в случайных позициях
@@ -90,6 +98,8 @@ void resetLevel(sf::RenderWindow& window, b2World& world, sf::Texture& tilesetTe
     viewPlayer.setCenter(startPosition);
     window.setView(viewPlayer);
 }
+
+
 
 int main() {
     // Создание окна
@@ -109,6 +119,11 @@ int main() {
     // Загрузка текстуры игрока для прыжка
     if (!playerJumpTexture.loadFromFile("assets/textures/player_spritesheetJump.png")) {
         std::cerr << "Failed to load player jump texture!" << std::endl;
+        return -1;
+    }
+    // Загрузка текстуры игрока для смерти
+    if (!playerDeathTexture.loadFromFile("assets/textures/player_spritesheetDeath.png")) {
+        std::cerr << "Failed to load player death texture!" << std::endl;
         return -1;
     }
     // Загрузка текстуры монеты
@@ -132,7 +147,7 @@ int main() {
     // Создание обработчика контактов
     ContactListener contactListener(nullptr);
     // Создание игрока
-    Player player(world, spawnPoint.x, spawnPoint.y, &contactListener, playerRunTexture, playerJumpTexture);
+    Player player(world, spawnPoint.x, spawnPoint.y, &contactListener, playerRunTexture, playerJumpTexture, playerDeathTexture);
     // Обновляем указатель на игрока в ContactListener
     contactListener.setPlayer(&player);
     // Устанавливаем обработчик контактов в мир Box2D
@@ -196,7 +211,7 @@ int main() {
                                 std::cerr << "Failed to load level!" << std::endl;
                                 return -1;
                             }
-                            player = Player(world, spawnPoint.x, spawnPoint.y, &contactListener, playerRunTexture, playerJumpTexture);
+                            player = Player(world, spawnPoint.x, spawnPoint.y, &contactListener, playerRunTexture, playerJumpTexture, playerDeathTexture);
                             // Обновляем указатель на игрока в ContactListener
                             contactListener.setPlayer(&player);
                             window.setView(viewPlayer);
@@ -221,29 +236,31 @@ int main() {
                     window.setView(isGlobalView ? viewGlobal : viewPlayer);
                 }
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
-                    resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer, "assets/maps/LVLTest2.tmx", SCALE, contactListener, playerRunTexture, playerJumpTexture, coins, mapWidthInTiles, mapHeightInTiles, tileSize);
+                    resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer, "assets/maps/LVLTest2.tmx", SCALE, contactListener, playerRunTexture, playerJumpTexture, playerDeathTexture, coins, mapWidthInTiles, mapHeightInTiles, tileSize);
                 }
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
+                    
                     DEBUG_DRAW_ENABLED = !DEBUG_DRAW_ENABLED;
+                    std::cout << "Debug draw enabled: " << DEBUG_DRAW_ENABLED << std::endl;
                 }
             }
         }
         // Проверка смерти игрока
         if (player.isDead()) {
-            std::cout << "Player is dead! Respawning..." << std::endl;
-            player.respawn(spawnPoint.x, spawnPoint.y);
-            // Сбрасываем камеру
-            sf::Vector2f startPosition(spawnPoint.x * SCALE, spawnPoint.y * SCALE);
-            viewPlayer.setCenter(startPosition);
-            window.setView(viewPlayer);
+            std::cout << "Player is dead! Waiting for input to respawn..." << std::endl;
+            // Ждем ввода для возрождения
         }
         // Очистка экрана
         window.clear(sf::Color(192, 192, 192)); // Серый фон
         float deltaTime = clock.restart().asSeconds();
         // Обработка ввода и обновление физики
         player.handleInput();
-        world.Step(deltaTime, 8, 3);
-        player.update(deltaTime);
+        if (!player.isDying() && !player.isWaitingForRespawn()) {
+            world.Step(deltaTime, 8, 3);
+            player.update(deltaTime);
+        } else {
+            player.update(deltaTime);
+        }
         // Обновление анимации монет
         for (auto& coin : coins) {
             coin.updateAnimation(deltaTime);
@@ -267,7 +284,7 @@ int main() {
             float maxX = mapWidthInTiles * tileSize - window.getSize().x / 2.0f;
             float minY = window.getSize().y / 2.0f;
             float maxY = mapHeightInTiles * tileSize - window.getSize().y / 2.0f;
-          
+
             window.setView(viewPlayer);
         }
         if (isMenuActive) {
@@ -303,6 +320,11 @@ int main() {
             scoreText.setString("Score: " + std::to_string(score));
             // Отрисовка счёта
             window.draw(scoreText);
+        }
+        // Обработка ввода после смерти
+        if (player.isWaitingForRespawn() && sf::Keyboard::isKeyPressed(sf::Keyboard::Enter)) {
+            player.respawn(spawnPoint.x, spawnPoint.y);
+
         }
         // Отображение содержимого
         window.display();

@@ -10,7 +10,7 @@ class ContactListener; // Предварительное объявление
 class Player {
 public:
     // Конструкторы
-    Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture);
+    Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture, const sf::Texture& deathTexture);
     Player(Player&& other) noexcept; // Конструктор перемещения
     ~Player(); // Деструктор для удаления физического тела
 
@@ -37,11 +37,16 @@ public:
 
     void loadTextureAndCreateCollisionMask();
     void updateAnimation(float deltaTime); // Новый метод для обновления анимации
+    
 
     void takeDamage(int damage); // Метод для получения урона
     bool isDead() const; // Метод для проверки, жив ли игрок
     void respawn(float x, float y); // Метод для возрождения
     int getHealth() const; // Метод для получения здоровья
+
+    // Новые методы для проверки состояний
+    bool isDying() const { return _isDying; }
+    bool isWaitingForRespawn() const { return _isWaitingForRespawn; }
 
 private:
     // Физика Box2D
@@ -51,11 +56,14 @@ private:
     // Графика SFML
     sf::Texture runTexture; // Текстура для бега и статичных состояний
     sf::Texture jumpTexture; // Текстура для прыжка
+    sf::Texture deathTexture; // Текстура для смерти
     sf::Sprite sprite;
 
     // Состояние игрока
     bool isRunning = false;
     bool isJumping = false;
+    bool _isDying = false;
+    bool _isWaitingForRespawn = false; // Флаг ожидания ввода для возрождения
     int health; // Здоровье игрока
 
     // Коллизии
@@ -65,12 +73,16 @@ private:
     sf::IntRect currentFrame; // Текущий кадр анимации
     std::vector<sf::IntRect> framesRunning; // Кадры анимации бега
     std::vector<sf::IntRect> framesJumping; // Кадры анимации прыжка
+    std::vector<sf::IntRect> framesDeath; // Кадры анимации смерти
     float animationTimer = 0.0f; // Таймер для анимации
     float animationSpeed = 0.1f; // Скорость анимации (время между кадрами)
     bool facingRight = true; // Направление движения игрока
 
     // Указатель на обработчик контактов
     ContactListener* contactListener;
+
+    // Точка спавна игрока
+    sf::Vector2f spawnPoint;
 };
 
 #endif // PLAYER_H

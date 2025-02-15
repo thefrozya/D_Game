@@ -4,8 +4,8 @@
 #include <iostream>
 
 // Конструктор
-Player::Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture)
-    : world(world), contactListener(contactListener), runTexture(runTexture), jumpTexture(jumpTexture), isJumping(false), health(100) {
+Player::Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture, const sf::Texture& deathTexture)
+    : world(world), contactListener(contactListener), runTexture(runTexture), jumpTexture(jumpTexture), deathTexture(deathTexture), isJumping(false), _isDying(false), _isWaitingForRespawn(false), health(100), spawnPoint(x, y) {
 
     std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
 
@@ -29,7 +29,7 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     shape.SetAsBox(ScaleCharacterX / 3.2f, ScaleCharacterY / 2.6f);
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
-    fixtureDef.density = 1.0f;
+    fixtureDef.density = 1.5f;
     fixtureDef.friction = 1.0f;
     fixtureDef.restitution = 0.1f;
     fixtureDef.userData.pointer = PLAYER_USER_DATA;
@@ -62,7 +62,8 @@ void Player::takeDamage(int damage) {
     health -= damage;
     if (health < 0) health = 0; // Здоровье не может быть меньше 0
     if (health == 0) {
-        isDead(); // Игрок умирает
+        _isDying = true; // Игрок начинает анимацию смерти
+        _isWaitingForRespawn = false; // Сбрасываем флаг ожидания ввода
     }
     std::cout << "Player took damage! Current health: " << health << std::endl;
 }
@@ -75,11 +76,15 @@ void Player::respawn(float x, float y) {
     health = 100;
     b2Vec2 position(x, y);
     body->SetTransform(position, body->GetAngle());
+    _isDying = false;
+    _isWaitingForRespawn = false;
 }
 
 int Player::getHealth() const {
     return health;
 }
+
+
 
 // Метод для загрузки текстуры и создания маски коллизии
 void Player::loadTextureAndCreateCollisionMask() {
@@ -97,6 +102,7 @@ void Player::loadTextureAndCreateCollisionMask() {
 
     const int FRAME_COUNT_RUNNING = 8; // Количество кадров бега
     const int FRAME_COUNT_JUMPING = 8; // Количество кадров прыжка
+    const int FRAME_COUNT_DEATH = 8; // Количество кадров смерти
     int frameWidth = runTexture.getSize().x / FRAME_COUNT_RUNNING;
     int frameHeight = runTexture.getSize().y;
 
@@ -109,6 +115,12 @@ void Player::loadTextureAndCreateCollisionMask() {
     frameWidth = jumpTexture.getSize().x / FRAME_COUNT_JUMPING;
     for (int i = 0; i < FRAME_COUNT_JUMPING; ++i) {
         framesJumping.push_back(sf::IntRect(i * frameWidth, 0, frameWidth, frameHeight));
+    }
+
+    // Загрузка кадров смерти из отдельного спрайтшита
+    frameWidth = deathTexture.getSize().x / FRAME_COUNT_DEATH;
+    for (int i = 0; i < FRAME_COUNT_DEATH; ++i) {
+        framesDeath.push_back(sf::IntRect(i * frameWidth, 0, frameWidth, frameHeight));
     }
 
     currentFrame = framesRunning[0];
@@ -132,22 +144,43 @@ bool Player::checkPixelCollision(const std::vector<sf::Vector2f>& otherPixels, c
 
 // Метод для обновления позиции спрайта
 void Player::update(float deltaTime) {
-    b2Vec2 positionB2 = body->GetPosition();
-    sf::Vector2f position(positionB2.x * SCALE, positionB2.y * SCALE);
-    sprite.setPosition(position);
+    if (_isDying) {
+        updateAnimation(deltaTime);
+    } else if (!_isWaitingForRespawn) {
+        b2Vec2 positionB2 = body->GetPosition();
+        sf::Vector2f position(positionB2.x * SCALE, positionB2.y * SCALE);
+        sprite.setPosition(position);
 
-    b2Vec2 velocity = body->GetLinearVelocity();
-    if (!isRunning) {
-        velocity.x *= (1.0f - PLAYER_SLOWDOWN_FACTOR * deltaTime);
-        body->SetLinearVelocity(velocity);
+        b2Vec2 velocity = body->GetLinearVelocity();
+        if (!isRunning) {
+            velocity.x *= (1.0f - PLAYER_SLOWDOWN_FACTOR * deltaTime);
+            body->SetLinearVelocity(velocity);
+        }
+
+        updateAnimation(deltaTime);
     }
-
-    updateAnimation(deltaTime);
 }
 
 // Метод для обновления анимации
 void Player::updateAnimation(float deltaTime) {
-    if (isJumping) {
+    if (_isDying) {
+        sprite.setTexture(deathTexture); // Используем текстуру смерти
+        animationTimer += deltaTime;
+        if (animationTimer >= animationSpeed) {
+            animationTimer = 0.0f;
+            static int currentFrameIndex = 0;
+            currentFrameIndex = (currentFrameIndex + 1) % framesDeath.size();
+            currentFrame = framesDeath[currentFrameIndex];
+            sprite.setTextureRect(currentFrame);
+            if (currentFrameIndex == framesDeath.size() - 1) {
+                // Завершение анимации смерти
+                _isDying = false;
+                _isWaitingForRespawn = true; // Ждем ввода для возрождения
+            }
+        }
+    } else if (_isWaitingForRespawn) {
+        // Не обновляем анимацию, ждем ввода
+    } else if (isJumping) {
         sprite.setTexture(jumpTexture); // Используем текстуру прыжка
         animationTimer += deltaTime;
         if (animationTimer >= animationSpeed) {
@@ -169,7 +202,7 @@ void Player::updateAnimation(float deltaTime) {
         }
     } else {
         sprite.setTexture(runTexture); // Используем текстуру бега
-        currentFrame = framesRunning[0]; // Используем первый кадр бега как статическое изображение
+        currentFrame = framesRunning[1]; // Используем первый кадр бега как статическое изображение
         sprite.setTextureRect(currentFrame);
     }
 
@@ -182,6 +215,11 @@ void Player::updateAnimation(float deltaTime) {
 
 // Метод для обработки ввода
 void Player::handleInput() {
+    if (_isDying || _isWaitingForRespawn) {
+        // Не обрабатываем ввод во время смерти и ожидании ввода
+        return;
+    }
+
     b2Vec2 velocity = body->GetLinearVelocity();
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
         velocity.x = std::min(velocity.x + PLAYER_RUN_FORCE, PLAYER_MAX_SPEED);
@@ -224,17 +262,23 @@ Player& Player::operator=(Player&& other) noexcept {
         body = other.body;
         runTexture = std::move(other.runTexture);
         jumpTexture = std::move(other.jumpTexture);
+        deathTexture = std::move(other.deathTexture);
         sprite = std::move(other.sprite);
         isRunning = other.isRunning;
+        isJumping = other.isJumping;
+        _isDying = other._isDying;
+        _isWaitingForRespawn = other._isWaitingForRespawn;
         contactListener = other.contactListener;
         collisionPixels = std::move(other.collisionPixels);
         currentFrame = other.currentFrame;
         framesRunning = std::move(other.framesRunning);
         framesJumping = std::move(other.framesJumping);
+        framesDeath = std::move(other.framesDeath);
         animationTimer = other.animationTimer;
         animationSpeed = other.animationSpeed;
         facingRight = other.facingRight;
-        isJumping = other.isJumping;
+        health = other.health;
+        spawnPoint = other.spawnPoint;
         other.body = nullptr; // Предотвращаем удаление тела в деструкторе временного объекта
     }
     return *this;
