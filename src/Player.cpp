@@ -4,17 +4,17 @@
 #include <iostream>
 
 // Конструктор
-Player::Player(b2World& world, float x, float y, ContactListener* contactListener,const sf::Texture& texture)
-    : world(world), contactListener(contactListener),isJumping(false),health(100) {  
-    
-        std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
+Player::Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture)
+    : world(world), contactListener(contactListener), runTexture(runTexture), jumpTexture(jumpTexture), isJumping(false), health(100) {
+
+    std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
+
     // Настройка физического тела
     b2BodyDef bodyDef;
     bodyDef.type = b2_dynamicBody;
     bodyDef.position.Set(x, y);
     body = world.CreateBody(&bodyDef);
     body->GetUserData().pointer = PLAYER_USER_DATA;
-
     body->SetFixedRotation(true);
 
     // Загрузка текстуры и создание маски коллизии
@@ -25,21 +25,18 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     const float frameHeight = 32.0f;
     const float ScaleCharacterX = frameWidth / SCALE;
     const float ScaleCharacterY = frameHeight / SCALE;
-
     b2PolygonShape shape;
     shape.SetAsBox(ScaleCharacterX / 3.2f, ScaleCharacterY / 2.6f);
-
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
-    fixtureDef.density = 1.5f;
+    fixtureDef.density = 1.0f;
     fixtureDef.friction = 1.0f;
     fixtureDef.restitution = 0.1f;
     fixtureDef.userData.pointer = PLAYER_USER_DATA;
-
     body->CreateFixture(&fixtureDef);
 
     // Настройка спрайта
-    sprite.setTexture(texture);
+    sprite.setTexture(runTexture);
     sprite.setOrigin(frameWidth / 2.0f, frameHeight / 2.0f);
 }
 
@@ -86,15 +83,9 @@ int Player::getHealth() const {
 
 // Метод для загрузки текстуры и создания маски коллизии
 void Player::loadTextureAndCreateCollisionMask() {
-    if (!texture.loadFromFile("assets/textures/player_spritesheet.png")) {
-        std::cerr << "Failed to load player texture!" << std::endl;
-        return;
-    }
-
-    sf::Image image = texture.copyToImage();
+    sf::Image image = runTexture.copyToImage();
     unsigned int width = image.getSize().x;
     unsigned int height = image.getSize().y;
-
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
             sf::Color pixel = image.getPixel(x, y);
@@ -104,15 +95,23 @@ void Player::loadTextureAndCreateCollisionMask() {
         }
     }
 
-    const int FRAME_COUNT = 8;
-    int frameWidth = texture.getSize().x / FRAME_COUNT;
-    int frameHeight = texture.getSize().y;
+    const int FRAME_COUNT_RUNNING = 8; // Количество кадров бега
+    const int FRAME_COUNT_JUMPING = 8; // Количество кадров прыжка
+    int frameWidth = runTexture.getSize().x / FRAME_COUNT_RUNNING;
+    int frameHeight = runTexture.getSize().y;
 
-    for (int i = 0; i < FRAME_COUNT; ++i) {
-        frames.push_back(sf::IntRect(i * frameWidth, 0, frameWidth, frameHeight));
+    // Загрузка кадров бега
+    for (int i = 0; i < FRAME_COUNT_RUNNING; ++i) {
+        framesRunning.push_back(sf::IntRect(i * frameWidth, 0, frameWidth, frameHeight));
     }
 
-    currentFrame = frames[0];
+    // Загрузка кадров прыжка из отдельного спрайтшита
+    frameWidth = jumpTexture.getSize().x / FRAME_COUNT_JUMPING;
+    for (int i = 0; i < FRAME_COUNT_JUMPING; ++i) {
+        framesJumping.push_back(sf::IntRect(i * frameWidth, 0, frameWidth, frameHeight));
+    }
+
+    currentFrame = framesRunning[0];
     sprite.setTextureRect(currentFrame);
 }
 
@@ -136,8 +135,6 @@ void Player::update(float deltaTime) {
     b2Vec2 positionB2 = body->GetPosition();
     sf::Vector2f position(positionB2.x * SCALE, positionB2.y * SCALE);
     sprite.setPosition(position);
-    // Отладочная информация
-    //std::cout << "Player sprite position updated to: (" << sprite.getPosition().x / SCALE << ", " << sprite.getPosition().y / SCALE << ")" << std::endl;
 
     b2Vec2 velocity = body->GetLinearVelocity();
     if (!isRunning) {
@@ -150,17 +147,29 @@ void Player::update(float deltaTime) {
 
 // Метод для обновления анимации
 void Player::updateAnimation(float deltaTime) {
-    if (isRunning) {
+    if (isJumping) {
+        sprite.setTexture(jumpTexture); // Используем текстуру прыжка
         animationTimer += deltaTime;
         if (animationTimer >= animationSpeed) {
             animationTimer = 0.0f;
             static int currentFrameIndex = 0;
-            currentFrameIndex = (currentFrameIndex + 1) % frames.size();
-            currentFrame = frames[currentFrameIndex];
+            currentFrameIndex = (currentFrameIndex + 1) % framesJumping.size();
+            currentFrame = framesJumping[currentFrameIndex];
+            sprite.setTextureRect(currentFrame);
+        }
+    } else if (isRunning) {
+        sprite.setTexture(runTexture); // Используем текстуру бега
+        animationTimer += deltaTime;
+        if (animationTimer >= animationSpeed) {
+            animationTimer = 0.0f;
+            static int currentFrameIndex = 0;
+            currentFrameIndex = (currentFrameIndex + 1) % framesRunning.size();
+            currentFrame = framesRunning[currentFrameIndex];
             sprite.setTextureRect(currentFrame);
         }
     } else {
-        currentFrame = frames[0];
+        sprite.setTexture(runTexture); // Используем текстуру бега
+        currentFrame = framesRunning[0]; // Используем первый кадр бега как статическое изображение
         sprite.setTextureRect(currentFrame);
     }
 
@@ -187,15 +196,14 @@ void Player::handleInput() {
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && contactListener->isOnGround()) {
-        //std::cout << "Attempting to jump..." << std::endl;
-
-        // Устанавливаем вертикальную скорость для прыжка
-        
         velocity.y = PLAYER_JUMP_IMPULSE;
         body->SetLinearVelocity(velocity);
-        //std::cout << "Jump applied!" << std::endl;
+        isJumping = true;
+    } else if (!contactListener->isOnGround()) {
+        isJumping = true;
+    } else {
+        isJumping = false;
     }
-    
 
     body->SetLinearVelocity(velocity);
 }
@@ -209,28 +217,29 @@ void Player::draw(sf::RenderWindow& window) {
 sf::Vector2f Player::getPosition() const {
     b2Vec2 position = body->GetPosition();
     return sf::Vector2f(position.x, position.y);
-    
 }
+
 Player& Player::operator=(Player&& other) noexcept {
     if (this != &other) {
-        
         body = other.body;
-        texture = std::move(other.texture);
+        runTexture = std::move(other.runTexture);
+        jumpTexture = std::move(other.jumpTexture);
         sprite = std::move(other.sprite);
         isRunning = other.isRunning;
         contactListener = other.contactListener;
         collisionPixels = std::move(other.collisionPixels);
         currentFrame = other.currentFrame;
-        frames = std::move(other.frames);
+        framesRunning = std::move(other.framesRunning);
+        framesJumping = std::move(other.framesJumping);
         animationTimer = other.animationTimer;
         animationSpeed = other.animationSpeed;
         facingRight = other.facingRight;
         isJumping = other.isJumping;
-
         other.body = nullptr; // Предотвращаем удаление тела в деструкторе временного объекта
     }
     return *this;
 }
+
 // Реализация метода setIsJumping
 void Player::setIsJumping(bool value) {
     isJumping = value;

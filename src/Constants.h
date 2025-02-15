@@ -10,7 +10,7 @@ static constexpr uintptr_t PLATFORM_USER_DATA = 2; // Идентификатор
 static constexpr uintptr_t Finish_USER_DATA = 3; // Идентификатор гриба
 static constexpr uintptr_t COIN_USER_DATA = 5;   // ID монеты
 static constexpr uintptr_t DEATH_USER_DATA = 6;  // ID триггера смерти
-static constexpr uintptr_t WALL_USER_DATA = 7;
+static constexpr uintptr_t WALL_USER_DATA = 7; // ID стены
 
 // Размеры окна
 static constexpr int WINDOW_WIDTH = 800;
@@ -24,7 +24,7 @@ static float CAMERA_MAX_Y = 0.0f;
 
 // Гравитация
 static constexpr float GRAVITY_X = 0.0f;
-static constexpr float GRAVITY_Y = 15.0f;
+static constexpr float GRAVITY_Y = 14.0f;
 
 // Параметры игрока
 static constexpr float PLAYER_RUN_FORCE = 5.0f; // Сила бега

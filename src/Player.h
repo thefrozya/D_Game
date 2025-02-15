@@ -10,7 +10,7 @@ class ContactListener; // Предварительное объявление
 class Player {
 public:
     // Конструкторы
-    Player(b2World& world, float x, float y, ContactListener* contactListener,const sf::Texture& texture);
+    Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture);
     Player(Player&& other) noexcept; // Конструктор перемещения
     ~Player(); // Деструктор для удаления физического тела
 
@@ -23,7 +23,6 @@ public:
     void draw(sf::RenderWindow& window);
 
     sf::FloatRect getBoundingBox() const; // Добавляем метод
-
     // Метод для получения позиции игрока
     sf::Vector2f getPosition() const;
 
@@ -36,30 +35,27 @@ public:
 
     b2Body* getBody() const { return body; } // Метод для получения физического тела
 
-       
     void loadTextureAndCreateCollisionMask();
     void updateAnimation(float deltaTime); // Новый метод для обновления анимации
-    
+
     void takeDamage(int damage); // Метод для получения урона
     bool isDead() const; // Метод для проверки, жив ли игрок
     void respawn(float x, float y); // Метод для возрождения
     int getHealth() const; // Метод для получения здоровья
 
 private:
-
-
     // Физика Box2D
     b2World& world; // Ссылка на мир Box2D
     b2Body* body;
 
     // Графика SFML
-    sf::Texture texture;
+    sf::Texture runTexture; // Текстура для бега и статичных состояний
+    sf::Texture jumpTexture; // Текстура для прыжка
     sf::Sprite sprite;
 
     // Состояние игрока
     bool isRunning = false;
-    bool isJumping ;
-
+    bool isJumping = false;
     int health; // Здоровье игрока
 
     // Коллизии
@@ -67,7 +63,8 @@ private:
 
     // Анимация
     sf::IntRect currentFrame; // Текущий кадр анимации
-    std::vector<sf::IntRect> frames; // Все кадры анимации
+    std::vector<sf::IntRect> framesRunning; // Кадры анимации бега
+    std::vector<sf::IntRect> framesJumping; // Кадры анимации прыжка
     float animationTimer = 0.0f; // Таймер для анимации
     float animationSpeed = 0.1f; // Скорость анимации (время между кадрами)
     bool facingRight = true; // Направление движения игрока
