@@ -36,9 +36,14 @@ public:
 
     b2Body* getBody() const { return body; } // Метод для получения физического тела
 
-        // Приватные методы
-        void loadTextureAndCreateCollisionMask();
-        void updateAnimation(float deltaTime); // Новый метод для обновления анимации
+       
+    void loadTextureAndCreateCollisionMask();
+    void updateAnimation(float deltaTime); // Новый метод для обновления анимации
+    
+    void takeDamage(int damage); // Метод для получения урона
+    bool isDead() const; // Метод для проверки, жив ли игрок
+    void respawn(float x, float y); // Метод для возрождения
+    int getHealth() const; // Метод для получения здоровья
 
 private:
 
@@ -54,6 +59,8 @@ private:
     // Состояние игрока
     bool isRunning = false;
     bool isJumping ;
+
+    int health; // Здоровье игрока
 
     // Коллизии
     std::vector<sf::Vector2f> collisionPixels;

@@ -30,6 +30,7 @@ private:
     // Объявление методов проверки контактов
     bool IsPlayerPlatformContact(uintptr_t bodyAUserData, uintptr_t bodyBUserData);
     bool IsPlayerMashroomContact(uintptr_t bodyAUserData, uintptr_t bodyBUserData);
+    bool IsPlayerDeathContact(uintptr_t bodyAUserData, uintptr_t bodyBUserData);
 };
 
 #endif // CONTACTLISTENER_H

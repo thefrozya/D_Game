@@ -9,8 +9,9 @@
 
 namespace LevelLoader {
     bool loadLevel(const std::string& filePath, sf::Texture& tilesetTexture,
-                   std::vector<std::vector<int>>& levelData, int& firstgid,
-                   b2World& world, sf::Vector2f& spawnPoint, float scale);
-}
+        std::vector<std::vector<int>>& levelData, int& firstgid,
+        b2World& world, sf::Vector2f& spawnPoint, float scale,
+        int& mapWidthInTiles, int& mapHeightInTiles, int& tileSize);
+    }
 
 #endif // LEVELLOADER_H

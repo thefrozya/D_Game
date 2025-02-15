@@ -5,7 +5,7 @@
 
 // Конструктор
 Player::Player(b2World& world, float x, float y, ContactListener* contactListener,const sf::Texture& texture)
-    : world(world), contactListener(contactListener),isJumping(false) {  
+    : world(world), contactListener(contactListener),isJumping(false),health(100) {  
     
         std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
     // Настройка физического тела
@@ -27,12 +27,12 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     const float ScaleCharacterY = frameHeight / SCALE;
 
     b2PolygonShape shape;
-    shape.SetAsBox(ScaleCharacterX / 2.5f, ScaleCharacterY / 2.5f);
+    shape.SetAsBox(ScaleCharacterX / 3.2f, ScaleCharacterY / 2.6f);
 
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
-    fixtureDef.density = 1.0f;
-    fixtureDef.friction = 0.3f;
+    fixtureDef.density = 1.5f;
+    fixtureDef.friction = 1.0f;
     fixtureDef.restitution = 0.1f;
     fixtureDef.userData.pointer = PLAYER_USER_DATA;
 
@@ -59,6 +59,29 @@ sf::FloatRect Player::getBoundingBox() const {
         sprite.getTexture()->getSize().x,
         sprite.getTexture()->getSize().y
     );
+}
+
+void Player::takeDamage(int damage) {
+    health -= damage;
+    if (health < 0) health = 0; // Здоровье не может быть меньше 0
+    if (health == 0) {
+        isDead(); // Игрок умирает
+    }
+    std::cout << "Player took damage! Current health: " << health << std::endl;
+}
+
+bool Player::isDead() const {
+    return health <= 0; // Игрок мёртв, если здоровье <= 0
+}
+
+void Player::respawn(float x, float y) {
+    health = 100;
+    b2Vec2 position(x, y);
+    body->SetTransform(position, body->GetAngle());
+}
+
+int Player::getHealth() const {
+    return health;
 }
 
 // Метод для загрузки текстуры и создания маски коллизии
@@ -114,7 +137,7 @@ void Player::update(float deltaTime) {
     sf::Vector2f position(positionB2.x * SCALE, positionB2.y * SCALE);
     sprite.setPosition(position);
     // Отладочная информация
-    //std::cout << "Player sprite position updated to: (" << sprite.getPosition().x << ", " << sprite.getPosition().y << ")" << std::endl;
+    //std::cout << "Player sprite position updated to: (" << sprite.getPosition().x / SCALE << ", " << sprite.getPosition().y / SCALE << ")" << std::endl;
 
     b2Vec2 velocity = body->GetLinearVelocity();
     if (!isRunning) {
@@ -164,13 +187,13 @@ void Player::handleInput() {
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && contactListener->isOnGround()) {
-        std::cout << "Attempting to jump..." << std::endl;
+        //std::cout << "Attempting to jump..." << std::endl;
 
-               // Устанавливаем вертикальную скорость для прыжка
+        // Устанавливаем вертикальную скорость для прыжка
         
         velocity.y = PLAYER_JUMP_IMPULSE;
         body->SetLinearVelocity(velocity);
-        std::cout << "Jump applied!" << std::endl;
+        //std::cout << "Jump applied!" << std::endl;
     }
     
 
@@ -184,8 +207,9 @@ void Player::draw(sf::RenderWindow& window) {
 
 // Метод для получения позиции игрока
 sf::Vector2f Player::getPosition() const {
-    b2Vec2 positionB2 = body->GetPosition();
-    return sf::Vector2f(positionB2.x * SCALE, positionB2.y * SCALE);
+    b2Vec2 position = body->GetPosition();
+    return sf::Vector2f(position.x, position.y);
+    
 }
 Player& Player::operator=(Player&& other) noexcept {
     if (this != &other) {
