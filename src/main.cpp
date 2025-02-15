@@ -207,7 +207,7 @@ int main() {
                             isMenuActive = false;
                             window.setView(viewPlayer); // Переключаемся на игровую камеру
                             // Загрузка уровня
-                            if (!LevelLoader::loadLevel("assets/maps/LVLTest2.tmx", tilesetTexture, levelData, firstgid, world, spawnPoint, SCALE, mapWidthInTiles, mapHeightInTiles, tileSize)) {
+                            if (!LevelLoader::loadLevel("assets/maps/World1.tmx", tilesetTexture, levelData, firstgid, world, spawnPoint, SCALE, mapWidthInTiles, mapHeightInTiles, tileSize)) {
                                 std::cerr << "Failed to load level!" << std::endl;
                                 return -1;
                             }
@@ -236,7 +236,7 @@ int main() {
                     window.setView(isGlobalView ? viewGlobal : viewPlayer);
                 }
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R) {
-                    resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer, "assets/maps/LVLTest2.tmx", SCALE, contactListener, playerRunTexture, playerJumpTexture, playerDeathTexture, coins, mapWidthInTiles, mapHeightInTiles, tileSize);
+                    resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer, "assets/maps/World1.tmx", SCALE, contactListener, playerRunTexture, playerJumpTexture, playerDeathTexture, coins, mapWidthInTiles, mapHeightInTiles, tileSize);
                 }
                 if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::F1) {
                     

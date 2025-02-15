@@ -13,8 +13,8 @@ static constexpr uintptr_t DEATH_USER_DATA = 6;  // ID триггера смер
 static constexpr uintptr_t WALL_USER_DATA = 7; // ID стены
 
 // Размеры окна
-static constexpr int WINDOW_WIDTH = 800;
-static constexpr int WINDOW_HEIGHT = 600;
+static constexpr int WINDOW_WIDTH = 1920;
+static constexpr int WINDOW_HEIGHT = 1080;
 
 // Границы камеры (будут вычисляться динамически)
 static float CAMERA_MIN_X = 0.0f;

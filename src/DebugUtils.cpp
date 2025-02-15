@@ -29,7 +29,7 @@ void debugDrawPhysics(sf::RenderWindow& window, b2World& world, float scale) {
                 }
 
                 if (body->GetUserData().pointer == DEATH_USER_DATA) {
-                    setupPolygon(polygon, sf::Color::Blue); // Синий для триггеров смерти
+                    setupPolygon(polygon, sf::Color::White); // Синий для триггеров смерти
                 } else if (body->GetUserData().pointer == PLATFORM_USER_DATA) {
                     setupPolygon(polygon, sf::Color::Black); // Чёрный для платформ
                 } else if (body->GetUserData().pointer == COIN_USER_DATA) {

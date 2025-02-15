@@ -178,20 +178,10 @@ bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTex
                 std::cout << "Created platform at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
             } else if (strcmp(groupName, "Coin") == 0 && strcmp(name, "Coin") == 0) {
                 // Создание монеты
-                b2BodyDef bodyDef;
-                bodyDef.type = b2_staticBody;
-                bodyDef.position.Set(x, y);
-                b2Body* coinBody = world.CreateBody(&bodyDef);
-
-                b2CircleShape shape;
-                shape.m_radius = 0.5f;
-
-                b2FixtureDef fixtureDef;
-                fixtureDef.shape = &shape;
-                fixtureDef.isSensor = true;
-                fixtureDef.userData.pointer = COIN_USER_DATA;
-
-                coinBody->CreateFixture(&fixtureDef);
+                                // Создание платформ
+                                float width = object->FloatAttribute("width") / scale;
+                                float height = object->FloatAttribute("height") / scale;
+                createStaticBody(world, x + width / 2.0f, y + height / 2.0f, width, height, PLATFORM_USER_DATA);
                 std::cout << "Created coin at position: (" << x << ", " << y << ")" << std::endl;
             } else if (strcmp(groupName, "DEATH") == 0 && strcmp(name, "DEATH") == 0) {
                 // Создание триггера смерти
