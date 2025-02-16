@@ -48,9 +48,9 @@ std::vector<b2Vec2> parsePolyline(const char* pointsStr, float scale) {
 }
 
 bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTexture,
-                            std::vector<std::vector<int>>& levelData, int& firstgid,
-                            b2World& world, sf::Vector2f& spawnPoint, float scale,
-                            int& mapWidthInTiles, int& mapHeightInTiles, int& tileSize) {
+    std::vector<std::vector<int>>& levelData, int& firstgid,
+    b2World& world, sf::Vector2f& spawnPoint, float scale,
+    int& mapWidthInTiles, int& mapHeightInTiles, int& tileSize, sf::Texture& coinTexture,std::vector<Coin>& coins,sf::Texture& enemyTexture,std::vector<Enemy> &enemies) {
     // Загрузка TMX-файла
     tinyxml2::XMLDocument doc;
     if (doc.LoadFile(filePath.c_str()) != tinyxml2::XML_SUCCESS) {
@@ -178,10 +178,9 @@ bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTex
                 std::cout << "Created platform at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
             } else if (strcmp(groupName, "Coin") == 0 && strcmp(name, "Coin") == 0) {
                 // Создание монеты
-                                // Создание платформ
-                                float width = object->FloatAttribute("width") / scale;
-                                float height = object->FloatAttribute("height") / scale;
-                createStaticBody(world, x + width / 2.0f, y + height / 2.0f, width, height, PLATFORM_USER_DATA);
+                float x = object->FloatAttribute("x") / scale;
+                float y = object->FloatAttribute("y") / scale;
+                coins.emplace_back(world, x, y, coinTexture, 6, 0.1f);
                 std::cout << "Created coin at position: (" << x << ", " << y << ")" << std::endl;
             } else if (strcmp(groupName, "DEATH") == 0 && strcmp(name, "DEATH") == 0) {
                 // Создание триггера смерти
@@ -210,6 +209,11 @@ bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTex
 
                 wallBody->CreateFixture(&fixtureDef);
                 std::cout << "Created Wall at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
+            } else if (strcmp(groupName, "Enemy") == 0 && strcmp(name, "Enemy") == 0) {
+                float x = object->FloatAttribute("x") / scale;
+                float y = object->FloatAttribute("y") / scale;
+                enemies.emplace_back(world, x, y, enemyTexture);
+                std::cout << "Created enemy at position: (" << x << ", " << y << ")" << std::endl;
             }
         }
 

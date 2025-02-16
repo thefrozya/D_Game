@@ -298,12 +298,19 @@
   <object id="32" name="Wall" x="46.5" y="2751.5" width="193" height="48.5"/>
  </objectgroup>
  <objectgroup id="4" name="Finish">
-  <object id="33" name="Finish" x="208.5" y="2816.5" width="15.5" height="16"/>
+  <object id="33" name="Finish" x="208.5" y="2816.5">
+  <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="8" name="Enemy">
+  <object id="51" name="Enemy" gid="260" x="59.3333" y="3473.33" width="24" height="24"/>
  </objectgroup>
  <objectgroup id="5" name="Start">
-  <object id="34" name="Start" x="64" y="3543.5" width="16.5" height="17"/>
+  <object id="34" name="Start" x="64" y="3543.5">
+   <point/>
+  </object>
  </objectgroup>
  <objectgroup id="6" name="DEATH">
-  <object id="36" name="Death" x="144.5" y="3584" width="47.5" height="31.5"/>
+  <object id="36" name="DEATH" x="144.5" y="3584" width="47.5" height="31.5"/>
  </objectgroup>
 </map>

@@ -7,14 +7,14 @@ static constexpr float SCALE = 30.0f; // 1 метр = 30 пикселей
 // Типы объектов для пользовательских данных
 static constexpr uintptr_t PLAYER_USER_DATA = 1; // Идентификатор игрока
 static constexpr uintptr_t PLATFORM_USER_DATA = 2; // Идентификатор платформы
-static constexpr uintptr_t Finish_USER_DATA = 3; // Идентификатор гриба
+static constexpr uintptr_t Finish_USER_DATA = 3; // Идентификатор Конца игры
 static constexpr uintptr_t COIN_USER_DATA = 5;   // ID монеты
 static constexpr uintptr_t DEATH_USER_DATA = 6;  // ID триггера смерти
 static constexpr uintptr_t WALL_USER_DATA = 7; // ID стены
-
+static constexpr uintptr_t ENEMY_USER_DATA = 8; // ID Врагов
 // Размеры окна
-static constexpr int WINDOW_WIDTH = 1920;
-static constexpr int WINDOW_HEIGHT = 1080;
+static constexpr int WINDOW_WIDTH = 800;
+static constexpr int WINDOW_HEIGHT = 600;
 
 // Границы камеры (будут вычисляться динамически)
 static float CAMERA_MIN_X = 0.0f;
@@ -41,5 +41,7 @@ static int MAP_HEIGHT_IN_TILES = 0; // Высота карты в тайлах
 static int TILE_SIZE_IN_PIXELS = 16; // Размер одного тайла в пикселях (по умолчанию 16)
 
 extern bool DEBUG_DRAW_ENABLED;
+
+
 
 #endif

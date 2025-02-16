@@ -16,6 +16,7 @@
                 "src/DebugUtils.cpp",
                 "src/Menu.cpp",
                 "src/Coin.cpp",
+                "src/Enemy.cpp",
                 "-o",
                 "SimpleGame.exe",
                 "-IC:/SFML-2.5.1/include",

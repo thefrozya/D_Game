@@ -48,10 +48,15 @@ public:
     bool isDying() const { return _isDying; }
     bool isWaitingForRespawn() const { return _isWaitingForRespawn; }
 
+    void bounce();
+
 private:
     // Физика Box2D
     b2World& world; // Ссылка на мир Box2D
     b2Body* body;
+
+    float velocity = 0.0f;
+    const float BOUNCE_FORCE = 15.0f; // Пример силы отскока
 
     // Графика SFML
     sf::Texture runTexture; // Текстура для бега и статичных состояний

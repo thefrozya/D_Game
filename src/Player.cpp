@@ -91,6 +91,7 @@ void Player::loadTextureAndCreateCollisionMask() {
     sf::Image image = runTexture.copyToImage();
     unsigned int width = image.getSize().x;
     unsigned int height = image.getSize().y;
+    
     for (unsigned int y = 0; y < height; ++y) {
         for (unsigned int x = 0; x < width; ++x) {
             sf::Color pixel = image.getPixel(x, y);
@@ -159,6 +160,17 @@ void Player::update(float deltaTime) {
 
         updateAnimation(deltaTime);
     }
+}
+
+void Player::bounce() {
+    // Получаем текущую скорость игрока
+    b2Vec2 velocity = body->GetLinearVelocity();
+
+    // Применяем силу отскока (например, вверх)
+    velocity.y = -BOUNCE_FORCE;
+
+    // Устанавливаем новую скорость телу Box2D
+    body->SetLinearVelocity(velocity);
 }
 
 // Метод для обновления анимации

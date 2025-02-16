@@ -3,25 +3,28 @@
 
 #include <SFML/Graphics.hpp>
 #include <Box2D/Box2D.h>
-#include <vector>
 
 class Coin {
 public:
-    Coin(b2World& world, float x, float y, const sf::Texture& texture, int frameCount, float animationSpeed);
-    void draw(sf::RenderWindow& window);
-    bool isCollected() const;
-    void collect();
-    sf::FloatRect getBoundingBox() const;
+    Coin(b2World& world, float x, float y, sf::Texture& texture, int frameCount, float animationSpeed);
+    ~Coin();
+
     void updateAnimation(float deltaTime);
+    void draw(sf::RenderWindow& window);
+    void collect();
+    bool isCollected() const;
+    sf::FloatRect getBoundingBox() const;
 
 private:
+    b2Body* body;
     sf::Sprite sprite;
-    std::vector<sf::IntRect> frames;
-    int currentFrame = 0;
-    float animationTimer = 0.0f;
+    sf::IntRect textureRect;
+    int frameWidth, frameHeight;
+    int frameCount;
     float animationSpeed;
-    bool collected = false;
-    b2Body* body; // Физическое тело монеты
+    int currentFrame;
+    float elapsedTime;
+    bool collected;
 };
 
 #endif // COIN_H
