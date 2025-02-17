@@ -21,13 +21,13 @@
                 "SimpleGame.exe",
                 "-IC:/SFML-2.5.1/include",
                 "-LC:/SFML-2.5.1/lib",
-                "-IG:/box2d-2.4.2/include",
-                "-LG:/box2d-2.4.2/build",
-                "-IG:/GameD/D_Game/include",
+                "-IC:/box2d-2.4.2/include",
+                "-LC:/box2d-2.4.2/build",
+                "-ID:/D_game/D_Game/include",
                 "-lsfml-graphics",
                 "-lsfml-window",
                 "-lsfml-system",
-                "G:/box2d-2.4.2/build/bin/libbox2d.a",
+                "C:/box2d-2.4.2/build/bin/libbox2d.a",
                 "-std=c++17"
             ],
             "group": {

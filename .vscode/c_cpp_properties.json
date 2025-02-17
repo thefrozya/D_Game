@@ -5,8 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "C:/SFML-2.5.1/include",
-                "G:/box2d-2.4.2/include",
-                "G:/GameD/D_Game/include"
+                "C:/box2d-2.4.2/include",
+                "D:/D_Game/D_Game/include"
             ],
             "defines": [],
             "compilerPath": "C:/mingw64/bin/g++.exe",
