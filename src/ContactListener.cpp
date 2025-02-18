@@ -50,7 +50,8 @@ void ContactListener::BeginContact(b2Contact* contact) {
     if (IsPlayerDeathContact(bodyAUserData, bodyBUserData)) {
         std::cout << "Player touched the DEATH trigger!" << std::endl;
         if (player && !player->isDead()) { // Проверяем, жив ли игрок
-            player->takeDamage(100); // Игрок получает урон
+            player->bounce();
+            player->takeDamage(50); // Игрок получает урон
         }
     }
 
@@ -72,16 +73,16 @@ void ContactListener::BeginContact(b2Contact* contact) {
     if (bodyAUserData == ENEMY_USER_DATA || bodyBUserData == ENEMY_USER_DATA) {
         std::cout << "Enemy collision detected!" << std::endl;
     }
-    if ((bodyAUserData == ENEMY_USER_DATA && bodyBUserData == PLATFORM_USER_DATA) ||
+    /*if ((bodyAUserData == ENEMY_USER_DATA && bodyBUserData == PLATFORM_USER_DATA) ||
         (bodyBUserData == ENEMY_USER_DATA && bodyAUserData == PLATFORM_USER_DATA)) {
         std::cout << "Enemy is on ground." << std::endl;
-    }
+    }*/
 
     // Проверка контакта с врагом
     if (IsPlayerEnemyContact(bodyAUserData, bodyBUserData)) {
         Player* playerPtr = nullptr;
         Enemy* enemy = nullptr;
-
+        
         if (bodyAUserData == PLAYER_USER_DATA) {
             playerPtr = reinterpret_cast<Player*>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
             enemy = reinterpret_cast<Enemy*>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
@@ -89,21 +90,27 @@ void ContactListener::BeginContact(b2Contact* contact) {
             playerPtr = reinterpret_cast<Player*>(contact->GetFixtureB()->GetBody()->GetUserData().pointer);
             enemy = reinterpret_cast<Enemy*>(contact->GetFixtureA()->GetBody()->GetUserData().pointer);
         }
+        
+        if (!playerPtr || !enemy) {
+            std::cerr << "Invalid contact data!" << std::endl;
+            return;
+        }
 
-       if (playerPtr && enemy) {
+       /*if (playerPtr && enemy) {
             b2WorldManifold manifold;
             contact->GetWorldManifold(&manifold);
-
+            std::cout << "Contact normal: (" << manifold.normal.x << ", " << manifold.normal.y << ")" << std::endl;
             // Если игрок касается врага сверху, уничтожаем врага
-            if (manifold.normal.y > 0.5f) {
+            if (manifold.normal.y < 0.7f) {
+                player->bounce(); // Игрок подпрыгивает
                 enemy->kill(); // Убиваем врага
-                playerPtr->bounce(); // Игрок подпрыгивает
                 std::cout << "Player killed an enemy!" << std::endl;
             } else {
-                playerPtr->takeDamage(20); // Игрок получает урон
+                //player->bounce(); // Игрок подпрыгивает
+                player->takeDamage(20); // Игрок получает урон
                 std::cout << "Player took damage from enemy!" << std::endl;
             }
-        }
+        }*/
     }
 
     // Игнорирование столкновения со стенами

@@ -3,6 +3,7 @@
 #include <sstream>
 #include <tinyxml2.h>
 #include "Constants.h"
+#include <memory>
 
 // Вспомогательная функция для создания статического тела
 void createStaticBody(b2World& world, float x, float y, float width, float height, uintptr_t userData) {
@@ -50,7 +51,7 @@ std::vector<b2Vec2> parsePolyline(const char* pointsStr, float scale) {
 bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTexture,
     std::vector<std::vector<int>>& levelData, int& firstgid,
     b2World& world, sf::Vector2f& spawnPoint, float scale,
-    int& mapWidthInTiles, int& mapHeightInTiles, int& tileSize, sf::Texture& coinTexture,std::vector<Coin>& coins,sf::Texture& enemyTexture,std::vector<Enemy> &enemies) {
+    int& mapWidthInTiles, int& mapHeightInTiles, int& tileSize, sf::Texture& coinTexture,std::vector<Coin>& coins,sf::Texture& enemyTexture,std::vector<std::unique_ptr<Enemy>>& enemies) {
     // Загрузка TMX-файла
     tinyxml2::XMLDocument doc;
     if (doc.LoadFile(filePath.c_str()) != tinyxml2::XML_SUCCESS) {
@@ -161,33 +162,33 @@ bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTex
                 // Установка точки спавна игрока
                 spawnPoint.x = x;
                 spawnPoint.y = y - tileSize / scale / 2.0f;
-                std::cout << "Spawn point loaded from TMX: (" << spawnPoint.x << ", " << spawnPoint.y << ")" << std::endl;
+                //std::cout << "Spawn point loaded from TMX: (" << spawnPoint.x << ", " << spawnPoint.y << ")" << std::endl;
             } else if (strcmp(groupName, "Finish") == 0 && strcmp(name, "Finish") == 0) {
                 // Создание финишной точки
                 float width = object->FloatAttribute("width") / scale;
                 float height = object->FloatAttribute("height") / scale;
                 std::cout << "Position: (" << x << ", " << y << ")" << std::endl;
                 createStaticBody(world, x + width / 2.0f, y + height / 2.0f, width, height, Finish_USER_DATA);
-                std::cout << "Created Finish object at (" << x << ", " << y << ")" << std::endl;
+                //std::cout << "Created Finish object at (" << x << ", " << y << ")" << std::endl;
             } else if (strcmp(groupName, "Platforms") == 0) {
                 // Создание платформ
                 float width = object->FloatAttribute("width") / scale;
                 float height = object->FloatAttribute("height") / scale;
                 std::cout << "Position: (" << x << ", " << y << ")" << std::endl;
                 createStaticBody(world, x + width / 2.0f, y + height / 2.0f, width, height, PLATFORM_USER_DATA);
-                std::cout << "Created platform at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
+                //std::cout << "Created platform at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
             } else if (strcmp(groupName, "Coin") == 0 && strcmp(name, "Coin") == 0) {
                 // Создание монеты
                 float x = object->FloatAttribute("x") / scale;
                 float y = object->FloatAttribute("y") / scale;
                 coins.emplace_back(world, x, y, coinTexture, 6, 0.1f);
-                std::cout << "Created coin at position: (" << x << ", " << y << ")" << std::endl;
+                //std::cout << "Created coin at position: (" << x << ", " << y << ")" << std::endl;
             } else if (strcmp(groupName, "DEATH") == 0 && strcmp(name, "DEATH") == 0) {
                 // Создание триггера смерти
                 float width = object->FloatAttribute("width") / scale;
                 float height = object->FloatAttribute("height") / scale;
                 createStaticBody(world, x + width / 2.0f, y + height / 2.0f, width, height, DEATH_USER_DATA);
-                std::cout << "Created DEATH trigger at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
+                //std::cout << "Created DEATH trigger at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
             } else if (strcmp(groupName, "Wall") == 0) {
                 // Создание стен
                 float width = object->FloatAttribute("width") / scale;
@@ -208,12 +209,12 @@ bool LevelLoader::loadLevel(const std::string& filePath, sf::Texture& tilesetTex
                 fixtureDef.userData.pointer = WALL_USER_DATA;
 
                 wallBody->CreateFixture(&fixtureDef);
-                std::cout << "Created Wall at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
+                //std::cout << "Created Wall at (" << x << ", " << y << ") with size (" << width << ", " << height << ")" << std::endl;
             } else if (strcmp(groupName, "Enemy") == 0 && strcmp(name, "Enemy") == 0) {
                 float x = object->FloatAttribute("x") / scale;
                 float y = object->FloatAttribute("y") / scale;
-                enemies.emplace_back(world, x, y, enemyTexture);
-                std::cout << "Created enemy at position: (" << x << ", " << y << ")" << std::endl;
+                enemies.emplace_back(std::make_unique<Enemy>(world, x, y, enemyTexture));
+                //std::cout << "Created enemy at position: (" << x << ", " << y << ")" << std::endl;
             }
         }
 

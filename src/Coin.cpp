@@ -3,7 +3,7 @@
 #include <iostream>
 
 Coin::Coin(b2World& world, float x, float y, sf::Texture& texture, int frameCount, float animationSpeed)
-    : frameCount(frameCount), animationSpeed(animationSpeed), currentFrame(0), elapsedTime(0.0f), collected(false) {
+    :body(nullptr),shouldDestroyBody(true), frameCount(frameCount), animationSpeed(animationSpeed), currentFrame(0), elapsedTime(0.0f), collected(false) {
     // Устанавливаем текстуру
     sprite.setTexture(texture);
 
@@ -36,9 +36,13 @@ Coin::Coin(b2World& world, float x, float y, sf::Texture& texture, int frameCoun
     body->CreateFixture(&fixtureDef);
 }
 
-Coin::~Coin() {
-    if (body) {
+void Coin::markForNoDestruction() {
+    shouldDestroyBody = false;
+}
+Coin:: ~Coin() {
+    if (shouldDestroyBody && body) {
         body->GetWorld()->DestroyBody(body);
+        body = nullptr;
     }
 }
 

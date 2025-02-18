@@ -39,7 +39,7 @@ public:
     void updateAnimation(float deltaTime); // Новый метод для обновления анимации
     
 
-    void takeDamage(int damage); // Метод для получения урона
+    void takeDamage(int damage, b2Vec2 damageSourcePosition = b2Vec2(0.0f, 0.0f));
     bool isDead() const; // Метод для проверки, жив ли игрок
     void respawn(float x, float y); // Метод для возрождения
     int getHealth() const; // Метод для получения здоровья
@@ -49,14 +49,15 @@ public:
     bool isWaitingForRespawn() const { return _isWaitingForRespawn; }
 
     void bounce();
-
+    void markForNoDestruction();
+    const float BOUNCE_FORCE = 5.0f; // Пример силы отскока
 private:
     // Физика Box2D
     b2World& world; // Ссылка на мир Box2D
     b2Body* body;
 
     float velocity = 0.0f;
-    const float BOUNCE_FORCE = 15.0f; // Пример силы отскока
+   
 
     // Графика SFML
     sf::Texture runTexture; // Текстура для бега и статичных состояний
@@ -70,6 +71,11 @@ private:
     bool _isDying = false;
     bool _isWaitingForRespawn = false; // Флаг ожидания ввода для возрождения
     int health; // Здоровье игрока
+
+    // Таймер задержки получения урона
+    float damageCooldown; // Время задержки в секундах
+    float damageTimer;    // Текущее значение таймера
+    bool isInvulnerable;  // Флаг неуязвимости
 
     // Коллизии
     std::vector<sf::Vector2f> collisionPixels;
@@ -88,6 +94,8 @@ private:
 
     // Точка спавна игрока
     sf::Vector2f spawnPoint;
+
+    bool shouldDestroyBody; // Флаг для управления удалением
 };
 
 #endif // PLAYER_H

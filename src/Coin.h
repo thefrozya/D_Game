@@ -14,6 +14,8 @@ public:
     void collect();
     bool isCollected() const;
     sf::FloatRect getBoundingBox() const;
+    void markForNoDestruction();
+    
 
 private:
     b2Body* body;
@@ -25,6 +27,7 @@ private:
     int currentFrame;
     float elapsedTime;
     bool collected;
+    bool shouldDestroyBody;
 };
 
 #endif // COIN_H

@@ -8,9 +8,9 @@ float rightBoundary;
 
 // Конструктор
 Enemy::Enemy(b2World& world, float x, float y, const sf::Texture& enemyTexture)
-    : world(world), texture(enemyTexture), isDeadFlag(false), facingRight(true), 
+    :shouldDestroyBody(false), world(world), texture(enemyTexture), isDeadFlag(false), facingRight(true), 
     animationTimer(0.0f), animationSpeed(0.1f),timer(0.0f), changeDirectionTime(3.0f){
-    // Настройка физического тела
+    
     // Настройка физического тела
     b2BodyDef bodyDef;
     bodyDef.type = b2_dynamicBody;
@@ -47,13 +47,21 @@ Enemy::Enemy(b2World& world, float x, float y, const sf::Texture& enemyTexture)
 
 }
 
+void Enemy::markForNoDestruction() {
+    shouldDestroyBody = true;
+}
+
+
 // Деструктор
 Enemy::~Enemy() {
-    if (!body) {
-        world.DestroyBody(body);
+ if (body) {
+    std::cout << "Destroying body in Enemy destructor" << std::endl;
+        body->GetWorld()->DestroyBody(body);
         body = nullptr;
     }
+    std::cout << "Enemy destructor called!" << std::endl;
 }
+
 
 // Метод для загрузки текстуры и создания маски коллизии
 void Enemy::loadTextureAndCreateCollisionMask() {
@@ -85,6 +93,10 @@ void Enemy::loadTextureAndCreateCollisionMask() {
 
 // Метод для обновления состояния
 void Enemy::update(float deltaTime) {
+    if (isDeadFlag) {
+        return; // Если враг мертв, прекращаем обновление
+    }
+    if (!shouldDestroyBody && body ) {
     b2Vec2 positionB2 = body->GetPosition();
     sf::Vector2f position(positionB2.x * SCALE, positionB2.y * SCALE);
     sprite.setPosition(position);
@@ -116,12 +128,19 @@ void Enemy::update(float deltaTime) {
     } else {
         sprite.setScale(-1.0f, 1.0f);
     }
-
+    
     updateAnimation(deltaTime);
+}else {
+    std::cout << "Enemy body is null or should be destroyed" << std::endl;
+}
 }
 
 // Метод для обновления анимации
 void Enemy::updateAnimation(float deltaTime) {
+    if (isDeadFlag) {
+        return; // Если враг мертв, прекращаем обновление
+    }
+    if (!shouldDestroyBody && body ) {
     animationTimer += deltaTime;
     if (animationTimer >= animationSpeed) {
         animationTimer = 0.0f;
@@ -140,6 +159,7 @@ void Enemy::updateAnimation(float deltaTime) {
     /*std::cout << "Current animation frame: (" 
     << currentFrame.left << ", " << currentFrame.top << ")" << std::endl;*/
 }
+}
 // Метод для получения позиции
 sf::Vector2f Enemy::getPosition() const {
     b2Vec2 position = body->GetPosition();  
@@ -148,22 +168,34 @@ sf::Vector2f Enemy::getPosition() const {
 }
 
 // Метод для отрисовки 
-void Enemy::draw(sf::RenderWindow& window) {
-    window.draw(sprite);
-
+void Enemy::draw(sf::RenderWindow& window) {        
+    if (!shouldDestroyBody && body) {
+        window.draw(sprite);
+    }else {
+        std::cout << "Enemy body is null or should be destroyed" << std::endl;
+    }
 }
 
 // Метод для убийства врага
 void Enemy::kill() {
-    if (body) {
-        world.DestroyBody(body); // Удаляем тело из мира Box2D
-        body = nullptr; // Обнуляем указатель
+    std::cout << "Killing enemy" << std::endl;
+    if (!isDeadFlag) {
+        isDeadFlag = true; // Помечаем врага как мертвого
+        shouldDestroyBody = true; // Помечаем тело для удаления
+
+        if (body) {
+            body->GetWorld()->DestroyBody(body);
+            body = nullptr; // Обнуляем указатель на тело
+        }
     }
-    isDeadFlag = true;
 }
 
 // Метод для проверки, мертв ли враг
 bool Enemy::isDead() const {
     return isDeadFlag;
+}
+
+sf::FloatRect Enemy::getBoundingBox() const {
+    return sprite.getGlobalBounds(); // Or custom bounding box logic
 }
 

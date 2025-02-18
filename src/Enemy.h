@@ -22,11 +22,30 @@ public:
     // Геттеры
     sf::FloatRect getBoundingBox() const;
     sf::Vector2f getPosition() const;
+    
     void loadTextureAndCreateCollisionMask();
+    void markForNoDestruction();
+    void markForDestruction();
+    
+    bool shouldDestroyBody = false;
+    bool isMarkedForDestruction() const;
+
+    // Метод для получения тела Box2D
+    b2Body* getBody() const {
+        return body;
+    }
+    
+    // Метод для установки тела Box2D
+     void setBody(b2Body* newBody) {
+        body = newBody;
+    }
     
     
 
+    
 private:
+
+    
     // Методы для внутреннего использования
     void updateAnimation(float deltaTime);
     
@@ -49,11 +68,12 @@ private:
     float animationSpeed;
 
     // Состояния
-    bool isDeadFlag;
+    bool isDeadFlag =false;
     bool facingRight;
 
     // Параметры коллизии
     std::vector<sf::Vector2f> collisionPixels;
+
 };
 
 #endif // ENEMY_H

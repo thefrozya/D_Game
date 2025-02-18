@@ -5,7 +5,8 @@
 
 // Конструктор
 Player::Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture, const sf::Texture& deathTexture)
-    : world(world), contactListener(contactListener), runTexture(runTexture), jumpTexture(jumpTexture), deathTexture(deathTexture), isJumping(false), _isDying(false), _isWaitingForRespawn(false), health(100), spawnPoint(x, y) {
+    : world(world), contactListener(contactListener), runTexture(runTexture), jumpTexture(jumpTexture), deathTexture(deathTexture), 
+    isJumping(false), _isDying(false), _isWaitingForRespawn(false), health(100), spawnPoint(x, y),damageCooldown(0.2f), damageTimer(0.0f), isInvulnerable(false)  {
 
     std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
 
@@ -40,12 +41,18 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     sprite.setOrigin(frameWidth / 2.0f, frameHeight / 2.0f);
 }
 
+
+void Player::markForNoDestruction() {
+    shouldDestroyBody = false;
+}
+
 // Деструктор
 Player::~Player() {
-    if (body) {
-        world.DestroyBody(body);
+    if (shouldDestroyBody && body) {
+        body->GetWorld()->DestroyBody(body);
         body = nullptr;
     }
+    
 }
 
 sf::FloatRect Player::getBoundingBox() const {
@@ -58,14 +65,31 @@ sf::FloatRect Player::getBoundingBox() const {
     );
 }
 
-void Player::takeDamage(int damage) {
-    health -= damage;
-    if (health < 0) health = 0; // Здоровье не может быть меньше 0
-    if (health == 0) {
-        _isDying = true; // Игрок начинает анимацию смерти
-        _isWaitingForRespawn = false; // Сбрасываем флаг ожидания ввода
+void Player::takeDamage(int damage,b2Vec2 damageSourcePosition) {
+    if (!isInvulnerable) { // Проверяем, не находится ли игрок в состоянии неуязвимости
+        health -= damage;
+        if (health < 0) health = 0; // Здоровье не может быть меньше 0
+
+        if (health == 0) {
+            _isDying = true; // Игрок начинает анимацию смерти
+            _isWaitingForRespawn = false; // Сбрасываем флаг ожидания ввода
+        }
+
+        std::cout << "Player took damage! Current health: " << health << std::endl;
+
+    
+    if (damageSourcePosition != b2Vec2(0.0f, 0.0f)) {
+        b2Vec2 playerPosition = body->GetPosition();
+        b2Vec2 direction = playerPosition - damageSourcePosition;
+        direction.Normalize();
+
+        float impulseStrength = 2.5f; // Сила отталкивания
+        body->ApplyLinearImpulse(impulseStrength * direction, body->GetWorldCenter(), true);
     }
-    std::cout << "Player took damage! Current health: " << health << std::endl;
+        // Активируем неуязвимость
+        isInvulnerable = true;
+        damageTimer = 0.0f; // Сбрасываем таймер
+}
 }
 
 bool Player::isDead() const {
@@ -145,6 +169,16 @@ bool Player::checkPixelCollision(const std::vector<sf::Vector2f>& otherPixels, c
 
 // Метод для обновления позиции спрайта
 void Player::update(float deltaTime) {
+    // Обновляем таймер задержки
+    if (isInvulnerable) {
+        damageTimer += deltaTime;
+        if (damageTimer >= damageCooldown) {
+            isInvulnerable = false; // Игрок снова становится уязвимым
+            damageTimer = 0.0f;     // Сбрасываем таймер
+        }
+    }
+
+    // Остальная логика обновления...
     if (_isDying) {
         updateAnimation(deltaTime);
     } else if (!_isWaitingForRespawn) {
