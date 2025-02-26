@@ -39,6 +39,14 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     // Настройка спрайта
     sprite.setTexture(runTexture);
     sprite.setOrigin(frameWidth / 2.0f, frameHeight / 2.0f);
+
+    // Загрузка звука прыжка
+    if (!jumpSoundBuffer.loadFromFile("assets/music/jumpCharacter.ogg")) { 
+            std::cerr << "Failed to load jump sound!" << std::endl;
+            throw std::runtime_error("Jump sound loading failed");
+    }
+    
+    jumpSound.setBuffer(jumpSoundBuffer); // Присваиваем буфер звуку
 }
 
 
@@ -54,6 +62,8 @@ Player::~Player() {
     }
     
 }
+
+
 
 sf::FloatRect Player::getBoundingBox() const {
     b2Vec2 position = body->GetPosition();
@@ -209,6 +219,18 @@ void Player::bounce() {
     body->SetLinearVelocity(velocity);
 }
 
+
+// Метод для воспроизведения звука прыжка
+void Player::playJumpSound() {
+    if (jumpSound.getStatus() != sf::SoundSource::Playing) { // Проверяем, играет ли уже звук
+        jumpSound.play();
+    }
+}
+void Player::stopPlayJumpSound(){
+    if(jumpSound.getStatus() == sf::SoundSource::Playing) { // Проверяем, играет ли музыка
+        jumpSound.stop(); // Останавливаем воспроизведение
+    }
+}
 // Метод для обновления анимации
 void Player::updateAnimation(float deltaTime) {
     if (_isDying) {
@@ -237,7 +259,8 @@ void Player::updateAnimation(float deltaTime) {
             currentFrameIndex = (currentFrameIndex + 1) % framesJumping.size();
             currentFrame = framesJumping[currentFrameIndex];
             sprite.setTextureRect(currentFrame);
-        }
+        } 
+       
     } else if (isRunning) {
         sprite.setTexture(runTexture); // Используем текстуру бега
         animationTimer += deltaTime;
@@ -285,10 +308,13 @@ void Player::handleInput() {
         velocity.y = PLAYER_JUMP_IMPULSE;
         body->SetLinearVelocity(velocity);
         isJumping = true;
+        playJumpSound();
     } else if (!contactListener->isOnGround()) {
         isJumping = true;
+        
     } else {
         isJumping = false;
+        stopPlayJumpSound();
     }
 
     body->SetLinearVelocity(velocity);

@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <Box2D/Box2D.h>
 #include <vector>
+#include <SFML/Audio.hpp>
 
 class ContactListener; // Предварительное объявление
 
@@ -50,7 +51,10 @@ public:
 
     void bounce();
     void markForNoDestruction();
-    const float BOUNCE_FORCE = 5.0f; // Пример силы отскока
+    const float BOUNCE_FORCE = 5.0f;
+
+    void playJumpSound(); // Метод для воспроизведения звука прыжка
+    void stopPlayJumpSound();
 private:
     // Физика Box2D
     b2World& world; // Ссылка на мир Box2D
@@ -58,6 +62,9 @@ private:
 
     float velocity = 0.0f;
    
+    // Звук прыжка
+    sf::SoundBuffer jumpSoundBuffer; // Буфер для хранения звука
+    sf::Sound jumpSound;            // Объект для воспроизведения звука
 
     // Графика SFML
     sf::Texture runTexture; // Текстура для бега и статичных состояний
