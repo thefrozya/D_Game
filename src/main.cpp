@@ -13,6 +13,7 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+#include <SFML/Audio.hpp>
 
 
 // Инициализация глобальной переменной DEBUG_DRAW_ENABLED
@@ -69,7 +70,7 @@ void resetGameState(Player& player, std::vector<Coin>& coins, int& score, sf::Ve
     score = 0; // Сбрасываем счёт
 }
 
-void clearGameObjects(b2World& world, std::vector<Coin>& coins, const std::vector<std::unique_ptr<Enemy>>& enemies, Player& player) {
+void clearGameObjects(b2World& world, std::vector<Coin>& coins,int& score, const std::vector<std::unique_ptr<Enemy>>& enemies, Player& player) {
     // Удаляем все тела из мира Box2D
     for (b2Body* body = world.GetBodyList(); body; ) {
         b2Body* nextBody = body->GetNext();
@@ -79,7 +80,7 @@ void clearGameObjects(b2World& world, std::vector<Coin>& coins, const std::vecto
 
     // Очищаем списки монет и врагов
     coins.clear();
-    
+    score = 0;
 
     // Сбрасываем состояние игрока
     player.respawn(0.0f, 0.0f); // Временные координаты, будут обновлены при загрузке уровня
@@ -91,7 +92,7 @@ void resetLevel(sf::RenderWindow & window, b2World & world, sf::Texture & tilese
     sf::View & viewPlayer, const std::string & levelPath, float scale, ContactListener & contactListener,
     sf::Texture & playerRunTexture, sf::Texture & playerJumpTexture, sf::Texture & playerDeathTexture,
     int mapWidthInTiles, int mapHeightInTiles, int tileSize,
-    sf::Texture & coinTexture, std::vector<Coin> & coins,
+    sf::Texture & coinTexture,int& score, std::vector<Coin> & coins,
     sf::Texture & enemyTexture,std::vector<std::unique_ptr<Enemy>>& enemies) {
 // Отключаем удаление тел в деструкторах монет
 for (auto & coin : coins) {
@@ -117,9 +118,10 @@ body = nextBody;
 levelData.clear();
 firstgid = 0;
 
+score = 0;
 // Очищаем старые монеты и враги
 coins.clear();
-enemies.clear();
+
 
 // Загружаем уровень заново
 sf::Vector2f spawnPoint(0.0f, 0.0f);
@@ -239,7 +241,7 @@ int main() {
     healthText.setFont(font);
     healthText.setCharacterSize(24);
     healthText.setFillColor(sf::Color::Red);
-    healthText.setPosition(WINDOW_WIDTH - 150, 10); // Положение в правом верхнем углу
+    healthText.setPosition(WINDOW_WIDTH - 100, 10); // Положение в правом верхнем углу
     // Приближенная камера (следует за игроком)
     sf::View viewPlayer(sf::FloatRect(0, 0, WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f));
     const float cameraSpeed = 0.5f;
@@ -255,6 +257,7 @@ int main() {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed) {
+                menu.stopBackgroundMusic(); 
                 window.close();
             }
             if (isMenuActive) {
@@ -267,6 +270,7 @@ int main() {
                     } else if (event.key.code == sf::Keyboard::Enter) {
                         int selectedItem = menu.getPressedItem();
                         if (selectedItem == 0) { // Start Game
+                            menu.stopBackgroundMusic(); 
                             std::cout << "Starting game..." << std::endl;
                             isMenuActive = false;
                             window.setView(viewPlayer); // Переключаемся на игровую камеру
@@ -304,7 +308,7 @@ int main() {
                     resetLevel(window, world, tilesetTexture, levelData, firstgid, player, viewPlayer,
                         "assets/maps/World1.tmx", SCALE, contactListener, playerRunTexture,
                         playerJumpTexture, playerDeathTexture, mapWidthInTiles, mapHeightInTiles,
-                        tileSize, coinTexture, coins, enemyTexture, enemies);
+                        tileSize, coinTexture,score , coins, enemyTexture, enemies);
 
              std::cout << "Level reset triggered by pressing 'R'." << std::endl;
                          
@@ -379,16 +383,23 @@ int main() {
 
             window.setView(viewPlayer);
         }
+        sf::Text winText;
+        winText.setFont(font);
+        winText.setString("Congratulations!!\nYou Win!");
+        winText.setCharacterSize(48);
+        winText.setFillColor(sf::Color::Black);
+        winText.setPosition(WINDOW_WIDTH / 2.0f - winText.getLocalBounds().width / 2.0f,
+                            WINDOW_HEIGHT / 2.0f - winText.getLocalBounds().height / 2.0f);
         if (isMenuActive) {
             // Отрисовка меню
             menu.draw(window);
             window.setView(viewMenu);
         } else {
             // Проверяем, завершилась ли игра
-            if (contactListener.isGameOver) {
-                std::cout << "Game over! Closing the game..." << std::endl;
-                window.close(); // Закрываем окно игры
-                return 0; // Завершаем программу
+            if (contactListener.isGameWon) {
+                 // Отрисовка экрана победы
+                 window.setView(window.getDefaultView());
+                window.draw(winText);
             }
             
         // Отрисовка уровня

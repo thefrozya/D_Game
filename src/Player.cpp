@@ -73,6 +73,7 @@ void Player::takeDamage(int damage,b2Vec2 damageSourcePosition) {
         if (health == 0) {
             _isDying = true; // Игрок начинает анимацию смерти
             _isWaitingForRespawn = false; // Сбрасываем флаг ожидания ввода
+            
         }
 
         std::cout << "Player took damage! Current health: " << health << std::endl;
@@ -83,7 +84,7 @@ void Player::takeDamage(int damage,b2Vec2 damageSourcePosition) {
         b2Vec2 direction = playerPosition - damageSourcePosition;
         direction.Normalize();
 
-        float impulseStrength = 2.5f; // Сила отталкивания
+        float impulseStrength = 5.0f; // Сила отталкивания
         body->ApplyLinearImpulse(impulseStrength * direction, body->GetWorldCenter(), true);
     }
         // Активируем неуязвимость
@@ -93,6 +94,7 @@ void Player::takeDamage(int damage,b2Vec2 damageSourcePosition) {
 }
 
 bool Player::isDead() const {
+    
     return health <= 0; // Игрок мёртв, если здоровье <= 0
 }
 

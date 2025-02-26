@@ -22,6 +22,7 @@ public:
 
     // Переменные для состояния игры
     bool isGameOver; // Состояние завершения игры
+    bool isGameWon = false; // Флаг для состояния победы
 
 private:
     Player* player;

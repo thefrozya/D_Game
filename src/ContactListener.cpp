@@ -36,7 +36,8 @@ void ContactListener::BeginContact(b2Contact* contact) {
 
     // Проверка контакта с финишной платформой (грибом)
     if (IsPlayerMashroomContact(bodyAUserData, bodyBUserData)) {
-        isGameOver = true; // Завершение игры
+        isGameWon = true; // Устанавливаем флаг победы
+        //isGameOver = true; // Завершение игры
         std::cout << "Player reached the finish!" << std::endl;
     }
 
