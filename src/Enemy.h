@@ -4,10 +4,13 @@
 #include <SFML/Graphics.hpp>
 #include <Box2D/Box2D.h>
 #include <vector>
+#include "ObjectBase.h"
 
-class Enemy {
-public:
-    // Конструктор и деструктор
+class Enemy : public ObjectBase {
+    public:
+        ObjectType getType() const override {
+            return ObjectType::Enemy;
+        }
     Enemy(b2World& world, float x, float y, const sf::Texture& enemyTexture);
     ~Enemy();
 

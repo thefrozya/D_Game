@@ -2,16 +2,20 @@
 #define CONSTANTS_H
 
 // Масштаб (пиксели в метры)
-static constexpr float SCALE = 30.0f; // 1 метр = 30 пикселей
+static constexpr float SCALE = 30.0f; 
 
 // Типы объектов для пользовательских данных
-static constexpr uintptr_t PLAYER_USER_DATA = 1; // Идентификатор игрока
-static constexpr uintptr_t PLATFORM_USER_DATA = 2; // Идентификатор платформы
-static constexpr uintptr_t Finish_USER_DATA = 3; // Идентификатор Конца игры
-static constexpr uintptr_t COIN_USER_DATA = 5;   // ID монеты
-static constexpr uintptr_t DEATH_USER_DATA = 6;  // ID триггера смерти
-static constexpr uintptr_t WALL_USER_DATA = 7; // ID стены
-static constexpr uintptr_t ENEMY_USER_DATA = 8; // ID Врагов
+static constexpr uintptr_t DOOR_USER_DATA = 1; 
+static constexpr uintptr_t PLATFORM_USER_DATA = 2; 
+static constexpr uintptr_t FINISH_USER_DATA = 3; 
+static constexpr uintptr_t STAIRCASE_USER_DATA = 5;  
+static constexpr uintptr_t DEATH_USER_DATA = 6;  
+static constexpr uintptr_t WALL_USER_DATA = 7; 
+static constexpr uintptr_t MOVE_PLATFORM_USER_DATA = 8; 
+static constexpr uintptr_t TRAP_USER_DATA = 9;
+static constexpr uintptr_t LAVA_USER_DATA = 10;
+static constexpr uintptr_t CLOUDS_USER_DATA = 11;
+
 // Размеры окна
 static constexpr int WINDOW_WIDTH = 800;
 static constexpr int WINDOW_HEIGHT = 600;
@@ -28,7 +32,7 @@ static constexpr float GRAVITY_Y = 14.0f;
 
 // Параметры игрока
 static constexpr float PLAYER_RUN_FORCE = 5.0f; // Сила бега
-static constexpr float PLAYER_JUMP_IMPULSE = -7.0f; // Импульс прыжка
+static constexpr float PLAYER_JUMP_IMPULSE = -6.0f; // Импульс прыжка
 static constexpr float PLAYER_MAX_SPEED = 5.0f; // Максимальная скорость
 static constexpr float PLAYER_SLOWDOWN_FACTOR = 0.5f; // Коэффициент замедления
 

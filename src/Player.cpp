@@ -2,11 +2,33 @@
 #include "Constants.h"
 #include "ContactListener.h"
 #include <iostream>
+#include "Enemy.h"
+#include "Staircase.h"
 
+
+Player::Player() 
+    : world(*(b2World*)nullptr), // Не создаём мир
+      contactListener(nullptr), 
+      body(nullptr), 
+      velocity(0.0f), 
+      isRunning(false), 
+      isJumping(false), 
+      _isDying(false), 
+      _isWaitingForRespawn(false), 
+      health(0), 
+      damageCooldown(0.0f), 
+      damageTimer(0.0f), 
+      isInvulnerable(false), 
+      spawnPoint(0.0f, 0.0f), 
+      shouldDestroyBody(false) {
+    std::cout << "Default Player constructor called" << std::endl;
+}
 // Конструктор
 Player::Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture, const sf::Texture& deathTexture)
     : world(world), contactListener(contactListener), runTexture(runTexture), jumpTexture(jumpTexture), deathTexture(deathTexture), 
     isJumping(false), _isDying(false), _isWaitingForRespawn(false), health(100), spawnPoint(x, y),damageCooldown(0.2f), damageTimer(0.0f), isInvulnerable(false)  {
+
+        std::cout << "Constructing Player at: " << this << std::endl;
 
     std::cout << "Initializing player at position: (" << x << ", " << y << ")" << std::endl;
 
@@ -15,7 +37,7 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     bodyDef.type = b2_dynamicBody;
     bodyDef.position.Set(x, y);
     body = world.CreateBody(&bodyDef);
-    body->GetUserData().pointer = PLAYER_USER_DATA;
+    body->GetUserData().pointer = reinterpret_cast<uintptr_t>(this); // Сохраняем указатель на объект
     body->SetFixedRotation(true);
 
     // Загрузка текстуры и создание маски коллизии
@@ -27,13 +49,12 @@ Player::Player(b2World& world, float x, float y, ContactListener* contactListene
     const float ScaleCharacterX = frameWidth / SCALE;
     const float ScaleCharacterY = frameHeight / SCALE;
     b2PolygonShape shape;
-    shape.SetAsBox(ScaleCharacterX / 3.2f, ScaleCharacterY / 2.6f);
+    shape.SetAsBox(ScaleCharacterX / 4.2f, ScaleCharacterY / 3.2f);
     b2FixtureDef fixtureDef;
     fixtureDef.shape = &shape;
-    fixtureDef.density = 1.5f;
+    fixtureDef.density = 1.0f;
     fixtureDef.friction = 1.0f;
     fixtureDef.restitution = 0.1f;
-    fixtureDef.userData.pointer = PLAYER_USER_DATA;
     body->CreateFixture(&fixtureDef);
 
     // Настройка спрайта
@@ -54,57 +75,80 @@ void Player::markForNoDestruction() {
     shouldDestroyBody = false;
 }
 
-// Деструктор
-Player::~Player() {
-    if (shouldDestroyBody && body) {
-        body->GetWorld()->DestroyBody(body);
-        body = nullptr;
-    }
-    
+void Player::addKey(const std::string& keyType) {
+    collectedKeys.insert(keyType);
+    std::cout << "Key added: " << keyType << ", total keys: " << collectedKeys.size() << std::endl;
 }
 
+bool Player::hasKey(const std::string& keyType) const {
+    return collectedKeys.find(keyType) != collectedKeys.end();
+}
 
+// Деструктор
+Player::~Player() {
+    // НЕ вызываем destroyBody здесь
+    if (body) {
+        std::cout << "Player destructor: body still exists at " << body << ", should be nullptr" << std::endl;
+    }
+}
+
+void Player::destroyBody(b2World& world) {
+    if (body && shouldDestroyBody) {
+        world.DestroyBody(body);
+        body = nullptr; // Обязательно обнуляем указатель
+    }
+}
 
 sf::FloatRect Player::getBoundingBox() const {
     b2Vec2 position = body->GetPosition();
-    return sf::FloatRect(
+    sf::FloatRect bounds = sprite.getGlobalBounds();
+    sf::FloatRect result(
         position.x * SCALE - sprite.getOrigin().x,
         position.y * SCALE - sprite.getOrigin().y,
-        sprite.getTexture()->getSize().x,
-        sprite.getTexture()->getSize().y
+        bounds.width,
+        bounds.height
     );
+    /*std::cout << "Player bounds: (" << result.left << ", " << result.top << ", " 
+              << result.width << ", " << result.height << ")" << std::endl;*/
+    return result;
 }
 
-void Player::takeDamage(int damage,b2Vec2 damageSourcePosition) {
-    if (!isInvulnerable) { // Проверяем, не находится ли игрок в состоянии неуязвимости
+void Player::takeDamage(int damage, b2Vec2 damageSourcePosition) {
+    if (!this) {
+        std::cerr << "Error: Player object is null!" << std::endl;
+        return;
+    }
+    if (!isInvulnerable) {
         health -= damage;
-        if (health < 0) health = 0; // Здоровье не может быть меньше 0
-
+        if (health < 0) health = 0;
         if (health == 0) {
-            _isDying = true; // Игрок начинает анимацию смерти
-            _isWaitingForRespawn = false; // Сбрасываем флаг ожидания ввода
-            
+            _isDying = true;
+            _isWaitingForRespawn = false;
         }
-
         std::cout << "Player took damage! Current health: " << health << std::endl;
+    }
 
-    
+    std::cout << "Damage source position: (" << damageSourcePosition.x << ", " << damageSourcePosition.y << ")" << std::endl;
     if (damageSourcePosition != b2Vec2(0.0f, 0.0f)) {
         b2Vec2 playerPosition = body->GetPosition();
         b2Vec2 direction = playerPosition - damageSourcePosition;
         direction.Normalize();
 
-        float impulseStrength = 5.0f; // Сила отталкивания
-        body->ApplyLinearImpulse(impulseStrength * direction, body->GetWorldCenter(), true);
+        float impulseStrength = 20.0f; // Увеличиваем силу
+        b2Vec2 impulse = impulseStrength * direction;
+        std::cout << "Applying impulse: (" << impulse.x << ", " << impulse.y << ")" << std::endl;
+        body->ApplyLinearImpulse(impulse, body->GetWorldCenter(), true);
+    } else {
+        std::cout << "No impulse applied: damage source is (0, 0)" << std::endl;
     }
-        // Активируем неуязвимость
-        isInvulnerable = true;
-        damageTimer = 0.0f; // Сбрасываем таймер
-}
+
+    isInvulnerable = true;
+    damageTimer = 0.0f;
 }
 
+
 bool Player::isDead() const {
-    
+    std::cout << "Checking if player is dead..." << std::endl;
     return health <= 0; // Игрок мёртв, если здоровье <= 0
 }
 
@@ -181,6 +225,13 @@ bool Player::checkPixelCollision(const std::vector<sf::Vector2f>& otherPixels, c
 
 // Метод для обновления позиции спрайта
 void Player::update(float deltaTime) {
+
+    b2Vec2 velocity = body->GetLinearVelocity();
+
+    if (!body) {
+        std::cout << "Player body is null, skipping update" << std::endl;
+        return; // Ничего не делаем, если тело не создано
+    }
     // Обновляем таймер задержки
     if (isInvulnerable) {
         damageTimer += deltaTime;
@@ -189,6 +240,20 @@ void Player::update(float deltaTime) {
             damageTimer = 0.0f;     // Сбрасываем таймер
         }
     }
+
+        if (onStaircase) {
+            body->SetGravityScale(0.0f);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) velocity.x = -5.0f;
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) velocity.x = 5.0f;
+            else velocity.x = 0.0f;
+        }
+        else {
+            body->SetGravityScale(1.0f);
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) velocity.x = -5.0f;
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) velocity.x = 5.0f;
+            else velocity.x = 0.0f;
+        }
+    
 
     // Остальная логика обновления...
     if (_isDying) {
@@ -204,8 +269,17 @@ void Player::update(float deltaTime) {
             body->SetLinearVelocity(velocity);
         }
 
+     
+
         updateAnimation(deltaTime);
     }
+   // Подсвечиваем красным, если в лаве
+        if (inLava) {
+            sprite.setColor(sf::Color::Red);
+        } else {
+            sprite.setColor(sf::Color::White);
+        }
+    
 }
 
 void Player::bounce() {
@@ -278,43 +352,64 @@ void Player::updateAnimation(float deltaTime) {
     }
 
     if (facingRight) {
-        sprite.setScale(1.0f, 1.0f);
+        sprite.setScale(0.8f, 0.8f);
     } else {
-        sprite.setScale(-1.0f, 1.0f);
+        sprite.setScale(-0.8f, 0.8f);
     }
 }
 
 // Метод для обработки ввода
 void Player::handleInput() {
-    if (_isDying || _isWaitingForRespawn) {
-        // Не обрабатываем ввод во время смерти и ожидании ввода
+    if (_isDying || _isWaitingForRespawn || !body) {
+        std::cout << "Player body is null, skipping update" << std::endl;
         return;
     }
 
     b2Vec2 velocity = body->GetLinearVelocity();
+
+    if (onStaircase) {
+        body->SetGravityScale(0.0f);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W) || sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+            velocity.y = -2.0f;
+            isJumping = false;
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S) || sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+            velocity.y = 2.0f;
+            isJumping = false;
+        }
+        else {
+            velocity.y = 0.0f;
+        }
+    }
+    else {
+        body->SetGravityScale(1.0f);
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && contactListener->isOnGround()) {
+            velocity.y = PLAYER_JUMP_IMPULSE;
+            isJumping = true;
+            playJumpSound();
+        }
+        else if (!contactListener->isOnGround()) {
+            isJumping = true;
+        }
+        else {
+            isJumping = false;
+            stopPlayJumpSound();
+        }
+    }
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
         velocity.x = std::min(velocity.x + PLAYER_RUN_FORCE, PLAYER_MAX_SPEED);
         isRunning = true;
         facingRight = true;
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
         velocity.x = std::max(velocity.x - PLAYER_RUN_FORCE, -PLAYER_MAX_SPEED);
         isRunning = true;
         facingRight = false;
-    } else {
-        isRunning = false;
     }
-
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && contactListener->isOnGround()) {
-        velocity.y = PLAYER_JUMP_IMPULSE;
-        body->SetLinearVelocity(velocity);
-        isJumping = true;
-        playJumpSound();
-    } else if (!contactListener->isOnGround()) {
-        isJumping = true;
-        
-    } else {
-        isJumping = false;
-        stopPlayJumpSound();
+    else {
+        velocity.x = 0.0f;
+        isRunning = false;
     }
 
     body->SetLinearVelocity(velocity);
@@ -322,6 +417,10 @@ void Player::handleInput() {
 
 // Метод для отрисовки игрока
 void Player::draw(sf::RenderWindow& window) {
+    if (!body) {
+        std::cout << "Player body is null, skipping draw" << std::endl;
+        return;
+    }
     window.draw(sprite);
 }
 

@@ -16,7 +16,7 @@ Enemy::Enemy(b2World& world, float x, float y, const sf::Texture& enemyTexture)
     bodyDef.type = b2_dynamicBody;
     bodyDef.position.Set(x, y);
     body = world.CreateBody(&bodyDef);
-    body->GetUserData().pointer = ENEMY_USER_DATA;
+    body->GetUserData().pointer = reinterpret_cast<uintptr_t>(this);
     body->SetFixedRotation(true);
 
     // Загрузка текстуры и создание маски коллизии
@@ -36,7 +36,7 @@ Enemy::Enemy(b2World& world, float x, float y, const sf::Texture& enemyTexture)
     fixtureDef.density = 1.5f;
     fixtureDef.friction = 1.0f;
     fixtureDef.restitution = 0.1f;
-    fixtureDef.userData.pointer = ENEMY_USER_DATA;
+    
 
     body->CreateFixture(&fixtureDef);
 
@@ -48,18 +48,12 @@ Enemy::Enemy(b2World& world, float x, float y, const sf::Texture& enemyTexture)
 }
 
 void Enemy::markForNoDestruction() {
-    shouldDestroyBody = true;
+    shouldDestroyBody = false;
 }
 
 
-// Деструктор
 Enemy::~Enemy() {
- if (body) {
-    std::cout << "Destroying body in Enemy destructor" << std::endl;
-        body->GetWorld()->DestroyBody(body);
-        body = nullptr;
-    }
-    std::cout << "Enemy destructor called!" << std::endl;
+    if (body) std::cout << "Enemy destructor: body still exists" << std::endl;
 }
 
 
@@ -177,18 +171,14 @@ void Enemy::draw(sf::RenderWindow& window) {
 }
 
 // Метод для убийства врага
-void Enemy::kill() {
-    std::cout << "Killing enemy" << std::endl;
-    if (!isDeadFlag) {
-        isDeadFlag = true; // Помечаем врага как мертвого
-        shouldDestroyBody = true; // Помечаем тело для удаления
 
-        if (body) {
-            body->GetWorld()->DestroyBody(body);
-            body = nullptr; // Обнуляем указатель на тело
+    void Enemy::kill() {
+        std::cout << "Killing enemy" << std::endl;
+        if (!isDeadFlag) {
+            isDeadFlag = true; // Помечаем врага как мертвого
+            shouldDestroyBody = true; // Помечаем тело для удаления
         }
     }
-}
 
 // Метод для проверки, мертв ли враг
 bool Enemy::isDead() const {

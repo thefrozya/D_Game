@@ -5,13 +5,23 @@
 #include <Box2D/Box2D.h>
 #include <vector>
 #include <SFML/Audio.hpp>
+#include "ObjectBase.h"
+#include <iostream>
+#include "Staircase.h"
+#include <set>
 
 class ContactListener; // Предварительное объявление
 
-class Player {
-public:
+class Player : public ObjectBase {
+public: 
+
+ObjectType getType() const override {
+  return ObjectType::Player;
+}
+    Player(); // Добавляем конструктор по умолчанию
     // Конструкторы
-    Player(b2World& world, float x, float y, ContactListener* contactListener, const sf::Texture& runTexture, const sf::Texture& jumpTexture, const sf::Texture& deathTexture);
+    Player(b2World& world, float x, float y, ContactListener* contactListener, 
+      const sf::Texture& runTexture, const sf::Texture& jumpTexture, const sf::Texture& deathTexture);
     Player(Player&& other) noexcept; // Конструктор перемещения
     ~Player(); // Деструктор для удаления физического тела
 
@@ -24,8 +34,8 @@ public:
     void draw(sf::RenderWindow& window);
 
     sf::FloatRect getBoundingBox() const; // Добавляем метод
-    // Метод для получения позиции игрока
-    sf::Vector2f getPosition() const;
+    
+    sf::Vector2f getPosition() const;// Метод для получения позиции игрока
 
     // Метод для проверки пиксельной коллизии
     bool checkPixelCollision(const std::vector<sf::Vector2f>& otherPixels, const sf::Vector2f& otherPosition);
@@ -34,7 +44,21 @@ public:
     void setIsJumping(bool value);
     bool getIsJumping() const;
 
-    b2Body* getBody() const { return body; } // Метод для получения физического тела
+    bool isOnStaircase() const { return onStaircase; }
+    void setOnStaircase(bool on) { onStaircase = on; }
+
+    b2Body* getBody() const {
+      if (!body) {
+          std::cerr << "Warning: Attempt to get null body in Player at: " << this << std::endl;
+      }
+      return body;
+  }
+
+    void destroyBody(b2World& world);
+    void setBody(b2Body* b) { body = b; }
+    
+    bool isInLava() const { return inLava; } 
+    void setInLava(bool value) { inLava = value; } 
 
     void loadTextureAndCreateCollisionMask();
     void updateAnimation(float deltaTime); // Новый метод для обновления анимации
@@ -54,13 +78,23 @@ public:
     const float BOUNCE_FORCE = 5.0f;
 
     void playJumpSound(); // Метод для воспроизведения звука прыжка
-    void stopPlayJumpSound();
+    void stopPlayJumpSound();  
+      
+    ContactListener* contactListener;// Указатель на обработчик контактов
+
+
+    void addKey(const std::string& keyType);
+    bool hasKey(const std::string& keyType) const;
 private:
     // Физика Box2D
     b2World& world; // Ссылка на мир Box2D
     b2Body* body;
 
     float velocity = 0.0f;
+
+    bool onStaircase = false;
+
+    bool inLava = false; 
    
     // Звук прыжка
     sf::SoundBuffer jumpSoundBuffer; // Буфер для хранения звука
@@ -96,13 +130,14 @@ private:
     float animationSpeed = 0.1f; // Скорость анимации (время между кадрами)
     bool facingRight = true; // Направление движения игрока
 
-    // Указатель на обработчик контактов
-    ContactListener* contactListener;
+
 
     // Точка спавна игрока
     sf::Vector2f spawnPoint;
 
-    bool shouldDestroyBody; // Флаг для управления удалением
+    bool shouldDestroyBody= true; // Флаг для управления удалением
+
+    std::set<std::string> collectedKeys;
 };
 
 #endif // PLAYER_H
